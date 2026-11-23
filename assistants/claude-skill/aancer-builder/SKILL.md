@@ -25,7 +25,7 @@ If you cannot fetch these URLs, say so and ask the user to paste the relevant pa
 - Keep installation-specific values (connections, knowledge sets, approvers) as typed template parameters, never hard-coded.
 - Any step that writes, sends or deletes needs a human approval step unless the user explicitly says otherwise.
 - For embedded apps, include both the manifest and a minimal server that redeems the one-time sign-in code, and declare only the bridge capabilities the app really uses.
-- After the files, list the exact commands to check and sign the pack with the `aancer-pack` CLI (`lint`, then `sign`), and how to import it: the admin adds the publisher key under Platform Settings > Extensions > Trust keys, then uses Import pack, in an EVAL or test workspace first. Import checks everything and installs nothing; activation installs.
+- After the files, list the exact commands to check and sign the pack with the `aancer-pack` CLI (`lint`, then `sign`), and how to import it: the admin adds the publisher key under Platform Settings > Extensions > Trust keys, then uses Import pack, in an EVAL or test installation first. Import checks everything and installs nothing; activation installs.
 - Connector packs are signed by AANCER through certification. For a connector, produce the submission files and point the user to https://aancer.ai/partners.
 
 ## Check before you answer
