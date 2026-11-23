@@ -48,7 +48,9 @@ Read [Packs](/developers/packs) for the full format.
 
 ## Build with your AI assistant
 
-Copy this prompt into ChatGPT, Claude or Gemini. Replace the last paragraph with what you want to build.
+**Ready to use:** open the [AANCER Builder Gem in Gemini](https://gemini.google.com/gem/1-QrMUAZtHW0-ooIxLo6OXNqbvnTuxO0C?usp=sharing). It already knows the developer docs and every schema. Tell it what you want to build.
+
+In Claude, ChatGPT, Cursor or VS Code, connect the [AANCER Builder MCP server](#connect-the-aancer-builder-mcp-server). Or copy this prompt into ChatGPT, Claude or Gemini. Replace the last paragraph with what you want to build.
 
 ```text
 You are helping me build an extension for the AANCER platform.

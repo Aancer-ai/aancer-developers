@@ -10,24 +10,15 @@ Connect `https://aancer.ai/mcp` (Streamable HTTP, no authentication) in any MCP 
 
 Folder: `claude-skill/aancer-builder/` (SKILL.md). Zip the folder and upload it in Claude: Settings, Capabilities, Skills. For Claude Code, copy it to `~/.claude/skills/aancer-builder/`.
 
-## ChatGPT (Custom GPT)
+## ChatGPT
 
-Create at chatgpt.com/gpts/editor with the AANCER account.
-
-- **Name:** AANCER Builder
-- **Description:** Builds AANCER extensions: workflow templates, agents, skills, themes, connectors, dashboards, hooks and embedded apps, as packs that validate against the official schemas.
-- **Instructions:** paste the body of `claude-skill/aancer-builder/SKILL.md` (everything below the front matter).
-- **Knowledge:** upload `llms.txt` from https://aancer.ai/dev/llms.txt and the nine `*.schema.json` files from https://aancer.ai/dev/schemas/. Re-upload after each docs update.
-- **Capabilities:** Web search on (so it can fetch the live docs), Code interpreter on (to validate JSON), image generation off.
-- **Conversation starters:**
-  - Build a workflow template that triages incoming invoices with a human approval.
-  - Create a theme pack in our corporate colours.
-  - Add our own web app inside AANCER as an embedded app.
-  - Write an agent blueprint that answers supplier questions from our knowledge.
+Connect the builder MCP server `https://aancer.ai/mcp` as a custom connector in developer mode, with no authentication. For a plain chat, paste the prompt from https://aancer.ai/developers#build-with-your-ai-assistant.
 
 ## Gemini (Gem)
 
-Create at gemini.google.com, Gems, New Gem, with the AANCER Google account.
+Public Gem: https://gemini.google.com/gem/1-QrMUAZtHW0-ooIxLo6OXNqbvnTuxO0C?usp=sharing
+
+It was created at gemini.google.com, Gems, New Gem, with these settings:
 
 - **Name:** AANCER Builder
 - **Instructions:** the same SKILL.md body.
