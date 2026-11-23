@@ -1,0 +1,23 @@
+{
+  "id": "regions",
+  "title": "Regions",
+  "columns": [
+    {
+      "id": "region",
+      "type": "string",
+      "required": true,
+      "label": "Region"
+    },
+    {
+      "id": "manager_team",
+      "type": "string",
+      "label": "Manager team"
+    }
+  ],
+  "key": [
+    "region"
+  ],
+  "retention": {
+    "maxRows": 10000
+  }
+}

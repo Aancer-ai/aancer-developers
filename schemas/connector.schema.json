@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aancer.ai/dev/schemas/connector.schema.json",
+  "title": "AANCER connector (pack item kind connector, schemaVersion 1)",
+  "description": "The spec of a connector item. A connector pack holds exactly one connector item, install scope, with the built connector code in content/piece.tar. Connector packs are signed by AANCER through certification: partners submit the connector source, AANCER builds, reviews and signs it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pieceName", "pieceVersion", "displayName", "category", "archive", "framework", "egressHosts", "deps"],
+  "properties": {
+    "licenceId": { "type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", "description": "Present for a paid connector bound to one customer licence. Absent for a free connector." },
+    "pieceName": { "type": "string", "pattern": "^@(aancer|activepieces)/piece-[a-z0-9][a-z0-9-]{1,62}$", "description": "Package name. Partners use @aancer/piece-<name>. The part after piece- must be unique on the installation." },
+    "pieceVersion": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$" },
+    "displayName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "description": { "type": "string", "maxLength": 300 },
+    "category": { "enum": ["AI", "Comms", "Commerce", "Core", "Business", "Finance", "Productivity", "Content", "Developer", "Support", "Forms", "HR", "Payments", "Marketing", "Sales", "Other"] },
+    "archive": { "type": "string", "minLength": 1, "maxLength": 255, "description": "Path of the application/x-tar asset that holds the built connector. Always content/piece.tar." },
+    "framework": { "type": "string", "pattern": "^\\d+\\.\\d+$", "description": "major.minor of the pieces framework the connector was built against." },
+    "egressHosts": {
+      "type": "array",
+      "maxItems": 64,
+      "description": "Hosts the connector may reach once an administrator enables it. A bare * is not allowed.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 260,
+        "not": { "pattern": "^\\s*\\*\\s*$" },
+        "pattern": "^\\s*(\\*\\.)?[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*(?::\\d{1,5})?\\s*$"
+      }
+    },
+    "egressFromConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Take the allowed host and port from the connection the administrator creates, for systems that run at the customer.",
+      "required": ["hostProp", "portProp", "defaultPort"],
+      "properties": {
+        "hostProp": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "portProp": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "defaultPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "deps": {
+      "type": "array",
+      "maxItems": 2000,
+      "description": "Signed bill of materials of the third-party runtime packages.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "license"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 214 },
+          "version": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "license": { "type": "string", "maxLength": 128 }
+        }
+      }
+    },
+    "build": { "type": "object", "description": "Build facts written by the AANCER build." }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "pieceName": "@aancer/piece-example-echo",
+  "pieceVersion": "0.1.0",
+  "displayName": "Example echo",
+  "description": "Echoes its input back. Useful to test connector install.",
+  "category": "Developer",
+  "archive": "content/piece.tar",
+  "framework": "0.33",
+  "egressHosts": [],
+  "deps": []
+}

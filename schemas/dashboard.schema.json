@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aancer.ai/dev/schemas/dashboard.schema.json",
+  "title": "AANCER dashboard items (pack item kinds dataset, model, widget, dashboard, schemaVersion 1)",
+  "description": "Dashboards are built from four item kinds that stack: dataset, model, widget, dashboard. Choose the definition that matches the item kind. Rules this schema cannot express: table, chart and kpi widgets need a source with at least one measure; a chart fragment needs a mark or layer and must not carry data, $schema or URLs; layout entries satisfy x + w <= 12, do not overlap and place each widget once; referenced datasets, models, widgets and filters must exist in the workspace or in the same pack.",
+  "anyOf": [
+    { "$ref": "#/$defs/dataset" },
+    { "$ref": "#/$defs/model" },
+    { "$ref": "#/$defs/widget" },
+    { "$ref": "#/$defs/dashboard" }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
+    "dataset": {
+      "title": "dataset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "columns", "retention"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "maxLength": 120 },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "type"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "enum": ["string", "number", "integer", "boolean", "date", "datetime", "json"] },
+              "label": { "type": "string" },
+              "required": { "type": "boolean" },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "maxLength": { "type": "integer" }
+            }
+          }
+        },
+        "key": { "type": "array", "maxItems": 8, "items": { "type": "string" }, "description": "Columns used to upsert rows." },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxAgeDays": { "type": "integer", "minimum": 1 },
+            "maxRows": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "personalData": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["classes"],
+          "properties": {
+            "classes": { "type": "array", "items": { "type": "string" } },
+            "subjectColumn": { "type": ["string", "null"] }
+          }
+        },
+        "source": { "enum": ["workflow", "agent", "chat", "import", "pack", "manual"] },
+        "seedRows": { "type": "array", "maxItems": 5000, "items": { "type": "object" } }
+      }
+    },
+    "joinSide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity", "column"],
+      "properties": { "entity": { "type": "string" }, "column": { "type": "string" } }
+    },
+    "model": {
+      "title": "model",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "entities", "dimensions", "measures"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "maxLength": 120 },
+        "entities": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 20,
+          "description": "Each entity names exactly one of dataset or connection. A connection entity needs a saved query.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "dataset": { "type": "string" },
+              "connection": { "type": "string" },
+              "query": { "type": "string", "maxLength": 4000 },
+              "params": { "type": "object" }
+            }
+          }
+        },
+        "dimensions": {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["entity", "column"],
+            "properties": {
+              "entity": { "type": "string" },
+              "column": { "type": "string" },
+              "label": { "type": "string" },
+              "granularity": { "type": "array", "items": { "enum": ["day", "week", "month", "quarter", "year"] } }
+            }
+          }
+        },
+        "measures": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 100,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["entity", "agg"],
+            "properties": {
+              "entity": { "type": "string" },
+              "agg": { "enum": ["count", "sum", "avg", "min", "max", "distinct"] },
+              "column": { "type": "string" },
+              "label": { "type": "string" },
+              "format": { "enum": ["number", "integer", "percent", "currency"] }
+            }
+          }
+        },
+        "filters": {
+          "type": "object",
+          "maxProperties": 100,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dimension", "op"],
+            "properties": {
+              "dimension": { "type": "string" },
+              "op": { "enum": ["eq", "neq", "in", "gt", "gte", "lt", "lte", "between", "in_period", "contains"] },
+              "value": {},
+              "param": { "type": "string" },
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "variables": {
+          "type": "object",
+          "maxProperties": 50,
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type"],
+            "properties": {
+              "type": { "enum": ["string", "number", "date"] },
+              "default": {},
+              "label": { "type": "string" }
+            }
+          }
+        },
+        "joins": {
+          "type": "array",
+          "maxItems": 3,
+          "description": "Joins between dataset entities only.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "left", "right", "type"],
+            "properties": {
+              "id": { "type": "string", "maxLength": 64 },
+              "left": { "$ref": "#/$defs/joinSide" },
+              "right": { "$ref": "#/$defs/joinSide" },
+              "type": { "enum": ["inner", "left"] }
+            }
+          }
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "A model query.",
+      "required": ["measures"],
+      "properties": {
+        "measures": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string" } },
+        "dimensions": { "type": "array", "maxItems": 4, "items": { "type": "string" } },
+        "filters": { "type": "array", "items": { "type": "string" } },
+        "variables": { "type": "object" },
+        "order": { "type": "array", "items": { "type": "object", "required": ["field"], "properties": { "field": { "type": "string" }, "dir": { "enum": ["asc", "desc"] } } } },
+        "limit": { "type": "integer", "minimum": 1, "maximum": 5000 },
+        "granularity": { "type": "object", "additionalProperties": { "enum": ["day", "week", "month", "quarter", "year"] } }
+      }
+    },
+    "widgetAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "handler"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "icon": { "type": "string", "maxLength": 40 },
+        "handler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "ref"],
+          "properties": { "type": { "enum": ["workflow", "agent"] }, "ref": { "type": "string", "minLength": 1 } }
+        },
+        "input": { "enum": ["{{row}}", "{{selection}}"] },
+        "confirm": { "type": "boolean" },
+        "placement": { "enum": ["row", "toolbar"] }
+      }
+    },
+    "widget": {
+      "title": "widget",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["table", "chart", "kpi", "markdown", "form"] },
+        "title": { "type": "string", "maxLength": 120 },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model", "query"],
+          "properties": { "model": { "type": "string" }, "query": { "$ref": "#/$defs/query" } }
+        },
+        "table": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "columns": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["field"],
+                "properties": {
+                  "field": { "type": "string" },
+                  "label": { "type": "string" },
+                  "width": { "type": "integer" },
+                  "format": { "type": "string" }
+                }
+              }
+            },
+            "pageSize": { "type": "integer", "minimum": 1, "maximum": 200 }
+          }
+        },
+        "chart": {
+          "type": "object",
+          "description": "A Vega-Lite v5 fragment: mark (or layer) plus encoding, optional transform and config. Allowed marks: bar, line, area, point, arc, circle, square, tick, rect, rule, text, trail, boxplot, errorbar, errorband, geoshape. No data, no $schema, no URLs.",
+          "not": { "anyOf": [ { "required": ["data"] }, { "required": ["$schema"] }, { "required": ["url"] } ] }
+        },
+        "kpi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measure"],
+          "properties": {
+            "measure": { "type": "string" },
+            "compare": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["filter"],
+              "properties": { "filter": { "type": "string" }, "label": { "type": "string" } }
+            },
+            "format": { "enum": ["number", "integer", "percent", "currency"] },
+            "label": { "type": "string" }
+          }
+        },
+        "markdown": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": { "text": { "type": "string", "maxLength": 20000 } }
+        },
+        "form": {
+          "type": "object",
+          "description": "An Adaptive Cards 1.5 form that starts a workflow or an agent.",
+          "required": ["card", "target"],
+          "properties": {
+            "card": { "type": "object" },
+            "target": {
+              "oneOf": [
+                { "type": "object", "required": ["kind", "flowId"], "properties": { "kind": { "const": "workflow" }, "flowId": { "type": "string" } } },
+                { "type": "object", "required": ["kind", "agentRef"], "properties": { "kind": { "const": "agent" }, "agentRef": { "type": "string" }, "prompt": { "type": "string" } } }
+              ]
+            },
+            "onSuccess": { "type": "object", "properties": { "message": { "type": "string" } } },
+            "personalData": { "type": "object", "properties": { "classes": { "type": "array", "items": { "type": "string" } } } }
+          }
+        },
+        "interactions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "emit": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["dimension"],
+              "properties": { "dimension": { "type": "string", "minLength": 1, "maxLength": 64 } }
+            },
+            "listen": { "type": "boolean" }
+          }
+        },
+        "actions": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/widgetAction" } }
+      }
+    },
+    "dashboard": {
+      "title": "dashboard",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "layout"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "icon": { "enum": ["LayoutDashboard", "BarChart3", "LineChart", "PieChart", "Table2", "Gauge", "TrainFront", "Truck", "Factory", "Wallet", "Receipt", "Users", "Briefcase", "ClipboardList", "Activity", "Package", "ShoppingCart", "Building2", "Landmark", "Leaf"] },
+        "group": { "type": "string", "maxLength": 60 },
+        "order": { "type": "integer" },
+        "filters": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "model", "filter", "control"],
+            "properties": {
+              "id": { "type": "string" },
+              "model": { "type": "string" },
+              "filter": { "type": "string" },
+              "label": { "type": "string" },
+              "control": { "enum": ["period", "select", "text", "number"] },
+              "param": { "type": "string" },
+              "dimension": { "type": "string" }
+            }
+          }
+        },
+        "layout": {
+          "type": "array",
+          "maxItems": 40,
+          "description": "Placements on a 12-column grid with 40 px rows.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["widget", "x", "y", "w", "h"],
+            "properties": {
+              "widget": { "type": "string" },
+              "x": { "type": "integer", "minimum": 0, "maximum": 11 },
+              "y": { "type": "integer", "minimum": 0 },
+              "w": { "type": "integer", "minimum": 1, "maximum": 12 },
+              "h": { "type": "integer", "minimum": 1, "maximum": 40 },
+              "static": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

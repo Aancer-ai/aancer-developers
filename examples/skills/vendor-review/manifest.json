@@ -1,0 +1,29 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.business-skills",
+  "version": "1.0.0",
+  "title": "Acme business skills",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0",
+    "points": {
+      "skill": "1"
+    }
+  },
+  "parameters": [],
+  "items": [
+    {
+      "kind": "skill",
+      "schemaVersion": 1,
+      "id": "vendor-review",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/vendor-review.json"
+      }
+    }
+  ]
+}

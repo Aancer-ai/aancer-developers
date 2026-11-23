@@ -1,0 +1,21 @@
+{
+  "id": "revenue_this_month",
+  "type": "kpi",
+  "title": "Revenue this month",
+  "source": {
+    "model": "sales",
+    "query": {
+      "measures": [
+        "revenue"
+      ],
+      "filters": [
+        "this_month"
+      ]
+    }
+  },
+  "kpi": {
+    "measure": "revenue",
+    "format": "currency",
+    "label": "Revenue"
+  }
+}

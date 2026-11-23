@@ -1,0 +1,49 @@
+{
+  "id": "sales_orders",
+  "title": "Sales orders",
+  "columns": [
+    {
+      "id": "order_id",
+      "type": "string",
+      "required": true,
+      "label": "Order"
+    },
+    {
+      "id": "date",
+      "type": "date",
+      "required": true,
+      "label": "Date"
+    },
+    {
+      "id": "region",
+      "type": "string",
+      "required": true,
+      "label": "Region",
+      "maxLength": 40
+    },
+    {
+      "id": "product",
+      "type": "string",
+      "label": "Product"
+    },
+    {
+      "id": "amount",
+      "type": "number",
+      "min": 0,
+      "label": "Amount"
+    },
+    {
+      "id": "units",
+      "type": "integer",
+      "min": 0,
+      "label": "Units"
+    }
+  ],
+  "key": [
+    "order_id"
+  ],
+  "retention": {
+    "maxAgeDays": 730,
+    "maxRows": 500000
+  }
+}

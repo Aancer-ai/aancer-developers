@@ -1,0 +1,34 @@
+{
+  "name": "Invoice clerk",
+  "description": "Reads invoices, names supplier, amount and cost centre, and drafts the booking proposal.",
+  "category": "finance",
+  "icon": "receipt",
+  "instructions": "You help the accounts team. For each invoice, name the supplier, the amount and the cost centre, check them against the booking rules, and draft a booking proposal. Never book anything yourself.",
+  "starters": [
+    "Check this invoice",
+    "Draft the booking proposal"
+  ],
+  "model": {
+    "tier": "local-advanced"
+  },
+  "tools": [
+    {
+      "kind": "knowledge",
+      "ref": "{{param.policies}}"
+    },
+    {
+      "kind": "workflow",
+      "ref": "invoice-summary-approval"
+    },
+    {
+      "kind": "web",
+      "ref": "search"
+    },
+    {
+      "kind": "frame",
+      "ref": "render"
+    }
+  ],
+  "skills": [],
+  "riskHint": null
+}

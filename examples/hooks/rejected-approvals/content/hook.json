@@ -1,0 +1,31 @@
+{
+  "id": "rejected_approvals",
+  "title": "Tell the requester about rejected approvals",
+  "event": {
+    "name": "approval.decided",
+    "version": 1
+  },
+  "filter": [
+    {
+      "path": "payload.outcome",
+      "op": "eq",
+      "value": "rejected"
+    }
+  ],
+  "handler": {
+    "type": "workflow",
+    "ref": "flow_notify_requester"
+  },
+  "delivery": {
+    "maxConcurrency": 1,
+    "retry": {
+      "max": 3,
+      "backoffSeconds": [
+        30,
+        120,
+        480
+      ]
+    }
+  },
+  "enabled": true
+}

@@ -1,0 +1,39 @@
+{
+  "id": "revenue_by_region",
+  "type": "chart",
+  "title": "Revenue by region",
+  "source": {
+    "model": "sales",
+    "query": {
+      "measures": [
+        "revenue"
+      ],
+      "dimensions": [
+        "region"
+      ],
+      "filters": [
+        "this_month"
+      ],
+      "limit": 50
+    }
+  },
+  "interactions": {
+    "emit": {
+      "dimension": "region"
+    },
+    "listen": true
+  },
+  "chart": {
+    "mark": "bar",
+    "encoding": {
+      "x": {
+        "field": "region",
+        "type": "nominal"
+      },
+      "y": {
+        "field": "revenue",
+        "type": "quantitative"
+      }
+    }
+  }
+}

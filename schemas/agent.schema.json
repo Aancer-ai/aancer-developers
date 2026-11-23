@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aancer.ai/dev/schemas/agent.schema.json",
+  "title": "AANCER agent blueprint (pack item kind agent-blueprint, schemaVersion 1)",
+  "description": "The spec of an agent-blueprint item. A blueprint carries content only: instructions, starters, model tier and tool references. A person creates an agent from it in the target installation. Rules this schema cannot express: a workflow ref names a template item of the same pack or a pack parameter; an agent ref names another agent-blueprint item of the same pack or a pack parameter; a fn ref names a function item of the same pack; a web tool needs a declarations.dataFlows entry with destination web-search; no tool is listed twice. The agentConfig definition describes the REST draft body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "instructions", "model"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 2000 },
+    "category": { "type": "string", "maxLength": 80 },
+    "icon": { "type": "string", "maxLength": 40 },
+    "instructions": { "type": "string", "minLength": 1, "maxLength": 50000 },
+    "starters": { "type": "array", "maxItems": 12, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier"],
+      "properties": { "tier": { "enum": ["local-standard", "local-advanced", "cloud-reasoning"] } }
+    },
+    "tools": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "ref"],
+        "properties": {
+          "kind": { "enum": ["connector", "knowledge", "workflow", "agent", "web", "frame", "dataset", "fn"] },
+          "ref": { "type": "string", "minLength": 1, "maxLength": 200 }
+        },
+        "allOf": [
+          { "if": { "properties": { "kind": { "const": "knowledge" } } }, "then": { "properties": { "ref": { "pattern": "^\\{\\{param\\.[a-z][a-z0-9_]{0,63}\\}\\}$" } } } },
+          { "if": { "properties": { "kind": { "enum": ["connector", "dataset", "frame", "web"] } } }, "then": { "properties": { "ref": { "pattern": "^[A-Za-z0-9][A-Za-z0-9_.@/-]{0,199}$" } } } }
+        ]
+      }
+    },
+    "skills": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 120 } },
+    "riskHint": { "enum": ["high", null] }
+  },
+  "$defs": {
+    "agentConfig": {
+      "description": "Agent definition. The config object in the body of PUT /api/agents/{id}/draft {config}.",
+      "type": "object",
+      "required": ["instructions", "model", "tools", "input", "starters", "limits", "approval", "art22"],
+      "properties": {
+        "instructions": { "type": "string", "maxLength": 50000 },
+        "model": {
+          "oneOf": [
+            { "type": "object", "required": ["tier"], "properties": { "tier": { "enum": ["local-standard", "local-advanced", "cloud-reasoning"] } }, "not": { "required": ["route"] } },
+            { "type": "object", "required": ["route"], "properties": { "route": { "type": "string", "minLength": 1 } }, "not": { "required": ["tier"] } }
+          ]
+        },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "id"],
+            "properties": {
+              "kind": { "enum": ["connector", "knowledge", "workflow", "mcp", "agent", "code", "web", "frame", "dataset", "fn"] },
+              "id": { "type": "string", "minLength": 1 },
+              "fields": { "type": "object", "additionalProperties": { "type": "object", "required": ["mode"], "properties": { "mode": { "enum": ["fixed", "preselected"] }, "value": {} } } },
+              "connection": {
+                "oneOf": [
+                  { "type": "object", "required": ["mode"], "properties": { "mode": { "const": "user" } } },
+                  { "type": "object", "required": ["mode", "id"], "properties": { "mode": { "const": "preselected" }, "id": { "type": "string", "minLength": 1 } } }
+                ]
+              }
+            },
+            "if": { "properties": { "id": { "const": "*" } } },
+            "then": { "properties": { "kind": { "enum": ["connector", "knowledge", "workflow", "mcp"] } } }
+          }
+        },
+        "input": {
+          "oneOf": [
+            { "type": "object", "required": ["kind"], "properties": { "kind": { "const": "prompt" } } },
+            { "type": "object", "required": ["kind", "fields"], "properties": { "kind": { "const": "form" }, "fields": { "type": "array", "minItems": 1, "maxItems": 40, "items": { "$ref": "#/$defs/formField" } } } }
+          ]
+        },
+        "starters": { "type": "array", "maxItems": 12, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+        "output": { "type": "object", "required": ["fields"], "properties": { "fields": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/outputField" } } } },
+        "limits": {
+          "type": "object",
+          "required": ["maxSteps", "maxToolCalls", "maxUsd", "maxWallMs"],
+          "properties": {
+            "maxSteps": { "type": "integer", "exclusiveMinimum": 0, "maximum": 200 },
+            "maxToolCalls": { "type": "integer", "exclusiveMinimum": 0, "maximum": 500 },
+            "maxUsd": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 },
+            "maxWallMs": { "type": "integer", "exclusiveMinimum": 0, "maximum": 86400000 }
+          }
+        },
+        "approval": { "type": "object", "required": ["confirmWrites"], "properties": { "confirmWrites": { "enum": ["always", "workspace_default"] } } },
+        "art22": {
+          "type": "object",
+          "required": ["automatedDecisionMaking", "humanOversightRequired"],
+          "properties": {
+            "automatedDecisionMaking": { "enum": ["none", "assistive", "decisive"] },
+            "humanOversightRequired": { "type": "boolean" }
+          }
+        },
+        "personaId": { "type": ["string", "null"] },
+        "memory": { "type": "object", "required": ["perUser"], "properties": { "perUser": { "type": "boolean" } } },
+        "skills": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["art22"],
+            "properties": { "art22": { "anyOf": [
+              { "required": ["automatedDecisionMaking"], "properties": { "automatedDecisionMaking": { "enum": ["assistive", "decisive"] } } },
+              { "required": ["humanOversightRequired"], "properties": { "humanOversightRequired": { "const": true } } }
+            ] } }
+          },
+          "then": { "properties": { "approval": { "properties": { "confirmWrites": { "const": "always" } } } } }
+        },
+        {
+          "if": { "required": ["art22"], "properties": { "art22": { "required": ["automatedDecisionMaking"], "properties": { "automatedDecisionMaking": { "const": "decisive" } } } } },
+          "then": { "properties": { "art22": { "properties": { "humanOversightRequired": { "const": true } } } } }
+        }
+      ]
+    },
+    "formField": {
+      "type": "object",
+      "required": ["id", "type", "label"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+        "type": { "enum": ["text", "multiline", "number", "checkbox", "date", "email", "select", "multiselect", "file"] },
+        "label": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "help": { "type": "string" },
+        "options": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["value", "label"], "properties": { "value": { "type": "string", "minLength": 1 }, "label": { "type": "string", "minLength": 1 } } } },
+        "accept": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "maxFiles": { "type": "integer", "minimum": 1, "maximum": 10 }
+      }
+    },
+    "outputField": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+        "type": { "enum": ["text", "number", "boolean", "enum", "json"] },
+        "description": { "type": "string" },
+        "values": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "required": { "type": "boolean" }
+      }
+    }
+  }
+}

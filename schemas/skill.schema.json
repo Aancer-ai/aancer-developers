@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aancer.ai/dev/schemas/skill.schema.json",
+  "title": "AANCER skill (pack item kind skill, schemaVersion 1)",
+  "description": "The spec of a skill item: a named block of instructions that changes how the AI answers in chat and in agents. At install the triggers are appended to the description as \" Use when: a; b; c.\" and the combined text must stay at or under 1000 characters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "description", "instructions"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$", "description": "Use the same value as the item id." },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 1000, "pattern": "\\S" },
+    "instructions": { "type": "string", "minLength": 1, "maxLength": 20000, "pattern": "\\S", "description": "Markdown." },
+    "connectors": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Preferred connectors. A hint only; grants no access.",
+      "items": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[a-z0-9@][a-z0-9@/._-]{0,99}$" }
+    },
+    "triggers": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 80 } }
+  }
+}

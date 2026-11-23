@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shift planner</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; color: #14232b; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    td, th { border: 1px solid #d5dde1; padding: 6px 10px; text-align: left; }
+    #status { color: #56676f; }
+  </style>
+</head>
+<body>
+  <h1>Shift planner</h1>
+  <p id="status">Connecting to AANCER...</p>
+  <table id="plan" hidden>
+    <thead><tr><th>Date</th><th>Shift</th><th>Person</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <form id="request" hidden>
+    <label>Request a shift for <input name="date" type="date" required></label>
+    <button type="submit">Send request</button>
+  </form>
+  <script src="bridge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

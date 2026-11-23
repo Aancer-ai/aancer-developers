@@ -1,0 +1,39 @@
+{
+  "id": "sales-overview",
+  "title": "Sales overview",
+  "icon": "BarChart3",
+  "group": "Sales",
+  "order": 10,
+  "filters": [
+    {
+      "id": "period",
+      "model": "sales",
+      "filter": "this_month",
+      "control": "period",
+      "label": "Period"
+    }
+  ],
+  "layout": [
+    {
+      "widget": "revenue_this_month",
+      "x": 0,
+      "y": 0,
+      "w": 4,
+      "h": 4
+    },
+    {
+      "widget": "revenue_by_region",
+      "x": 4,
+      "y": 0,
+      "w": 8,
+      "h": 8
+    },
+    {
+      "widget": "recent_orders",
+      "x": 0,
+      "y": 8,
+      "w": 12,
+      "h": 10
+    }
+  ]
+}

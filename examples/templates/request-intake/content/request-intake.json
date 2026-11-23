@@ -1,0 +1,91 @@
+{
+  "id": "tpl-acme-request-intake",
+  "version": 1,
+  "workspace": "{{param.target_workspace}}",
+  "record": {
+    "name": "Request intake",
+    "description": "Takes a request from a web call and posts it to the team chat channel.",
+    "icon": "🧩",
+    "industry": "operations",
+    "complexity": "starter",
+    "locale": "en",
+    "aiAct": {
+      "riskClass": "unclassified",
+      "annexIiiCategory": "none",
+      "intendedPurpose": "",
+      "humanOversight": "",
+      "transparencyNote": ""
+    },
+    "compliance": {
+      "dataCategories": [],
+      "dataSubjects": [],
+      "lawfulBasis": "",
+      "retentionDays": null
+    },
+    "parameters": [
+      {
+        "id": "chat_connection",
+        "type": "connection",
+        "label": "Chat connection",
+        "required": true,
+        "connector": "connector-chat"
+      },
+      {
+        "id": "channel",
+        "type": "string",
+        "label": "Channel to post to",
+        "required": true,
+        "default": "general"
+      }
+    ],
+    "bindings": [
+      {
+        "parameterId": "chat_connection",
+        "stepId": "post",
+        "path": "connectorAuth"
+      },
+      {
+        "parameterId": "channel",
+        "stepId": "post",
+        "path": "connectorInputs.channel"
+      }
+    ],
+    "translations": {},
+    "flow": {
+      "name": "Request intake",
+      "rootStepId": "start",
+      "steps": [
+        {
+          "id": "start",
+          "type": "trigger",
+          "name": "When called",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "triggerType": "webhook",
+          "nextStepId": "post"
+        },
+        {
+          "id": "post",
+          "type": "connector",
+          "name": "Post to channel",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "connectorPiece": "connector-chat",
+          "connectorAction": "send",
+          "connectorInputs": {
+            "text": "{{trigger.body.text}}"
+          }
+        }
+      ]
+    },
+    "builtAgainst": {
+      "catalogHash": "",
+      "platformVersion": "1.0.0"
+    },
+    "createdAt": "2026-11-20T00:00:00.000Z"
+  }
+}

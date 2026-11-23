@@ -1,0 +1,60 @@
+{
+  "id": "recent_orders",
+  "type": "table",
+  "title": "Recent orders",
+  "source": {
+    "model": "sales",
+    "query": {
+      "measures": [
+        "revenue",
+        "units"
+      ],
+      "dimensions": [
+        "date",
+        "order_id",
+        "region",
+        "product"
+      ],
+      "order": [
+        {
+          "field": "date",
+          "dir": "desc"
+        }
+      ],
+      "limit": 200
+    }
+  },
+  "interactions": {
+    "listen": true
+  },
+  "table": {
+    "columns": [
+      {
+        "field": "date",
+        "label": "Date"
+      },
+      {
+        "field": "order_id",
+        "label": "Order"
+      },
+      {
+        "field": "region",
+        "label": "Region"
+      },
+      {
+        "field": "product",
+        "label": "Product"
+      },
+      {
+        "field": "revenue",
+        "label": "Amount",
+        "format": "currency"
+      },
+      {
+        "field": "units",
+        "label": "Units"
+      }
+    ],
+    "pageSize": 25
+  }
+}

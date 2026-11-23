@@ -1,0 +1,7 @@
+{
+  "displayName": "Example echo",
+  "title": "Example echo connector",
+  "description": "Echoes its input back. Useful to test connector install.",
+  "category": "Developer",
+  "egressHosts": []
+}

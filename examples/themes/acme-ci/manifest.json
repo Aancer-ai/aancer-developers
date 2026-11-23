@@ -1,0 +1,29 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.ci",
+  "version": "1.0.0",
+  "title": "Acme corporate identity",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0",
+    "points": {
+      "theme": "2"
+    }
+  },
+  "parameters": [],
+  "items": [
+    {
+      "kind": "theme",
+      "schemaVersion": 2,
+      "id": "acme-ci",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/theme.json"
+      }
+    }
+  ]
+}

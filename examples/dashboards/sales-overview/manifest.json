@@ -1,0 +1,100 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.sales-dashboard",
+  "version": "1.0.0",
+  "title": "Sales overview",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0",
+    "points": {
+      "dataset": "1",
+      "model": "1",
+      "widget": "1",
+      "dashboard": "1"
+    }
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": true
+    }
+  ],
+  "items": [
+    {
+      "kind": "dataset",
+      "schemaVersion": 1,
+      "id": "sales_orders",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/dataset-sales-orders.json"
+      }
+    },
+    {
+      "kind": "dataset",
+      "schemaVersion": 1,
+      "id": "regions",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/dataset-regions.json"
+      }
+    },
+    {
+      "kind": "model",
+      "schemaVersion": 1,
+      "id": "sales",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/model-sales.json"
+      }
+    },
+    {
+      "kind": "widget",
+      "schemaVersion": 1,
+      "id": "revenue_by_region",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/widget-revenue-by-region.json"
+      }
+    },
+    {
+      "kind": "widget",
+      "schemaVersion": 1,
+      "id": "revenue_this_month",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/widget-revenue-this-month.json"
+      }
+    },
+    {
+      "kind": "widget",
+      "schemaVersion": 1,
+      "id": "recent_orders",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/widget-recent-orders.json"
+      }
+    },
+    {
+      "kind": "dashboard",
+      "schemaVersion": 1,
+      "id": "sales-overview",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/dashboard-sales-overview.json"
+      }
+    }
+  ]
+}

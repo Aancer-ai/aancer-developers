@@ -1,0 +1,80 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.invoice-desk",
+  "version": "1.0.0",
+  "title": "Invoice desk",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": false
+    },
+    {
+      "id": "policies",
+      "type": "string",
+      "label": "Knowledge set with the booking rules",
+      "required": false
+    }
+  ],
+  "declarations": {
+    "v": 1,
+    "licence": "Apache-2.0",
+    "dataFlows": [
+      {
+        "purpose": "Read invoices the person shares in the conversation",
+        "data": [
+          "invoice documents"
+        ],
+        "personalData": true,
+        "destination": "installation"
+      },
+      {
+        "purpose": "Look up a supplier on the web when asked",
+        "data": [
+          "supplier names"
+        ],
+        "personalData": false,
+        "destination": "web-search"
+      }
+    ],
+    "egress": [],
+    "aiUse": {
+      "intendedPurpose": "Drafts booking proposals that a person checks",
+      "annexIII": false,
+      "humanOversight": "A person confirms every write before it happens"
+    },
+    "attestations": {
+      "ownsRights": true,
+      "noProhibitedPractice": true
+    }
+  },
+  "items": [
+    {
+      "kind": "agent-blueprint",
+      "schemaVersion": 1,
+      "id": "invoice-clerk",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/invoice-clerk.json"
+      }
+    },
+    {
+      "kind": "template",
+      "schemaVersion": 1,
+      "id": "invoice-summary-approval",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/invoice-summary-approval.json"
+      }
+    }
+  ]
+}

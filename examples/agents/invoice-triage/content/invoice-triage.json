@@ -1,0 +1,25 @@
+{
+  "name": "Invoice triage",
+  "description": "Sorts incoming invoices and drafts the booking proposal.",
+  "category": "finance",
+  "icon": "receipt",
+  "instructions": "You sort incoming invoices. For each one, name the supplier, the amount and the cost centre, and draft a booking proposal. Never book anything yourself.",
+  "starters": [
+    "Sort today's invoices"
+  ],
+  "model": {
+    "tier": "local-standard"
+  },
+  "tools": [
+    {
+      "kind": "connector",
+      "ref": "mail.send_email"
+    },
+    {
+      "kind": "frame",
+      "ref": "render"
+    }
+  ],
+  "skills": [],
+  "riskHint": null
+}

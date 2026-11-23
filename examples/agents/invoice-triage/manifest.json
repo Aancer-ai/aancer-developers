@@ -1,0 +1,26 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.invoice-triage",
+  "version": "1.0.0",
+  "title": "Invoice triage agent",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [],
+  "items": [
+    {
+      "kind": "agent-blueprint",
+      "schemaVersion": 1,
+      "id": "invoice-triage",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/invoice-triage.json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "id": "tpl-acme-invoice-summary",
+  "version": 1,
+  "workspace": "{{param.target_workspace}}",
+  "record": {
+    "name": "Invoice summary with approval",
+    "description": "Summarises an incoming invoice with a local model, asks a person to approve, then posts the summary to a chat channel.",
+    "icon": "🧾",
+    "industry": "financial",
+    "complexity": "intermediate",
+    "locale": "en",
+    "aiAct": {
+      "riskClass": "limited",
+      "annexIiiCategory": "none",
+      "intendedPurpose": "Summarise supplier invoices for a person who approves them.",
+      "humanOversight": "A person approves every summary in an approval step before it is posted.",
+      "transparencyNote": "The summary is written by an AI model."
+    },
+    "compliance": {
+      "dataCategories": [
+        "invoice data"
+      ],
+      "dataSubjects": [],
+      "lawfulBasis": "contract",
+      "retentionDays": 90
+    },
+    "parameters": [
+      {
+        "id": "approvers_1",
+        "type": "approvers",
+        "label": "Who approves the summary",
+        "required": true
+      },
+      {
+        "id": "conn_1",
+        "type": "connection",
+        "label": "Chat connection",
+        "required": true,
+        "connector": "connector-chat"
+      },
+      {
+        "id": "channel",
+        "type": "string",
+        "label": "Channel to post to",
+        "required": true,
+        "default": "finance"
+      }
+    ],
+    "bindings": [
+      {
+        "parameterId": "approvers_1",
+        "stepId": "approve",
+        "path": "approvers"
+      },
+      {
+        "parameterId": "conn_1",
+        "stepId": "post",
+        "path": "connectorAuth"
+      },
+      {
+        "parameterId": "channel",
+        "stepId": "post",
+        "path": "connectorInputs.channel"
+      }
+    ],
+    "translations": {},
+    "flow": {
+      "name": "Invoice summary with approval",
+      "rootStepId": "t",
+      "steps": [
+        {
+          "id": "t",
+          "type": "trigger",
+          "name": "Invoice received",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "triggerType": "webhook",
+          "nextStepId": "sum"
+        },
+        {
+          "id": "sum",
+          "type": "aancer-ai",
+          "name": "Summarise",
+          "position": {
+            "x": 0,
+            "y": 120
+          },
+          "modelTier": "local-standard",
+          "dataClassification": "internal",
+          "systemPrompt": "You summarise supplier invoices: supplier, amount, due date, cost centre.",
+          "userPromptTemplate": "{{trigger.body.text}}",
+          "maxTokens": 600,
+          "nextStepId": "approve"
+        },
+        {
+          "id": "approve",
+          "type": "approval",
+          "name": "Approve summary",
+          "position": {
+            "x": 0,
+            "y": 240
+          },
+          "approvalMessage": "Approve this invoice summary?",
+          "approvalReasoning": "{{sum}}",
+          "approvalTimeout": 24,
+          "nextStepId": "post"
+        },
+        {
+          "id": "post",
+          "type": "connector",
+          "name": "Post to channel",
+          "position": {
+            "x": 0,
+            "y": 360
+          },
+          "connectorPiece": "connector-chat",
+          "connectorAction": "send",
+          "connectorInputs": {
+            "text": "{{sum}}"
+          }
+        }
+      ]
+    },
+    "builtAgainst": {
+      "catalogHash": "",
+      "platformVersion": "1.0.0"
+    },
+    "createdAt": "2026-11-20T00:00:00.000Z"
+  }
+}

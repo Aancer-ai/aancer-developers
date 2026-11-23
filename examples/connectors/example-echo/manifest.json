@@ -1,0 +1,22 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "conn.example-echo",
+  "version": "0.1.0",
+  "title": "Example echo connector",
+  "publisher": {
+    "name": "Acme Example Ltd"
+  },
+  "parameters": [],
+  "items": [
+    {
+      "kind": "connector",
+      "schemaVersion": 1,
+      "id": "example-echo",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/connector.json"
+      }
+    }
+  ]
+}

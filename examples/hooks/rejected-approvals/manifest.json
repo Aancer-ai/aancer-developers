@@ -1,0 +1,34 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.approval-alerts",
+  "version": "1.0.0",
+  "title": "Approval alerts",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": true
+    }
+  ],
+  "items": [
+    {
+      "kind": "hook",
+      "schemaVersion": 1,
+      "id": "rejected_approvals",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "$ref": "content/hook.json"
+      }
+    }
+  ]
+}

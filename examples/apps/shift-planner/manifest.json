@@ -1,0 +1,79 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.shift-planner",
+  "version": "1.0.0",
+  "title": "Shift planner",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": true
+    }
+  ],
+  "items": [
+    {
+      "kind": "app",
+      "schemaVersion": 2,
+      "id": "shift-planner",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "id": "shift-planner",
+        "title": "Shift planner",
+        "icon": "Clock",
+        "group": "Operations",
+        "order": 30,
+        "url": "https://planner.example.com/?ws={{workspace}}",
+        "origin": "https://planner.example.com",
+        "sso": {
+          "mode": "code",
+          "scopes": [
+            "profile",
+            "workspace"
+          ]
+        },
+        "capabilities": [
+          "read:me",
+          "notify",
+          "read:dataset:shift_plan",
+          "write:dataset:shift_requests",
+          "navigate"
+        ],
+        "egress": {
+          "hosts": []
+        },
+        "embed": {
+          "sandbox": [
+            "allow-scripts",
+            "allow-forms",
+            "allow-same-origin"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "card",
+      "schemaVersion": 1,
+      "id": "shift-card",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "id": "shift-card",
+        "title": "Shift planner",
+        "body": "Plan next week's shifts.",
+        "href": "app:shift-planner",
+        "icon": "Clock",
+        "order": 10
+      }
+    }
+  ]
+}

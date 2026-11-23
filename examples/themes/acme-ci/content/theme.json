@@ -1,0 +1,77 @@
+{
+  "id": "acme-ci",
+  "platformName": "Acme AI",
+  "tagline": "Your data. Your AI.",
+  "defaultTheme": "light",
+  "typography": {
+    "ui": "system-ui, sans-serif",
+    "mono": "ui-monospace, monospace"
+  },
+  "themes": {
+    "light": {
+      "--bg": "#f6f8f9",
+      "--s0": "#eef2f4",
+      "--s1": "#ffffff",
+      "--s2": "#ffffff",
+      "--s3": "#eef2f4",
+      "--s4": "#e1e7eb",
+      "--t0": "#14232b",
+      "--t1": "#33454f",
+      "--t2": "#56676f",
+      "--ac": "#0f6e76",
+      "--aci": "#ffffff",
+      "--acs": "#e3f2f3",
+      "--acb": "rgba(15,110,118,0.30)",
+      "--pr": "#1d4e89",
+      "--prs": "#e6edf6",
+      "--prb": "rgba(29,78,137,0.30)",
+      "--b": "#d5dde1",
+      "--bm": "#bcc8ce",
+      "--bs": "#8a9aa2",
+      "--scrollbar": "#bcc8ce",
+      "--anchor": "#12313a",
+      "--anchor-raised": "#1b414c",
+      "--ink-on-anchor": "#ffffff",
+      "--ink-on-anchor-dim": "#c3d3d8",
+      "--shadow-card": "0 1px 3px rgba(20,35,43,0.08), 0 4px 14px rgba(20,35,43,0.06)"
+    },
+    "dark": {
+      "--bg": "#0f1a1f",
+      "--s0": "#0b1418",
+      "--s1": "#0f1a1f",
+      "--s2": "#16252c",
+      "--s3": "#1d2f37",
+      "--s4": "#283d46",
+      "--t0": "#eef4f6",
+      "--t1": "#c6d4d9",
+      "--t2": "#9fb1b8",
+      "--ac": "#4fc1c9",
+      "--aci": "#0b1418",
+      "--acs": "#143238",
+      "--acb": "rgba(79,193,201,0.35)",
+      "--pr": "#8db4e6",
+      "--prs": "#1a2b3f",
+      "--prb": "rgba(141,180,230,0.35)",
+      "--b": "#283d46",
+      "--bm": "#36505b",
+      "--bs": "#4a6672",
+      "--scrollbar": "#36505b",
+      "--anchor": "#081013",
+      "--anchor-raised": "#1d2f37",
+      "--ink-on-anchor": "#eef4f6",
+      "--ink-on-anchor-dim": "#9fb1b8",
+      "--shadow-card": "0 1px 3px rgba(0,0,0,0.45), 0 4px 14px rgba(0,0,0,0.3)"
+    }
+  },
+  "login": {
+    "backgroundColor": "#12313a",
+    "tagline": "Welcome to Acme AI",
+    "legalFooter": "Copyright Acme Example Ltd"
+  },
+  "email": {
+    "headerBackground": "#12313a",
+    "bodyBackground": "#ffffff",
+    "textColor": "#33454f",
+    "buttonColor": "#0f6e76"
+  }
+}

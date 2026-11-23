@@ -1,0 +1,47 @@
+{
+  "workspaceId": "ws-finance",
+  "hook": {
+    "id": "rejected_approvals",
+    "event": {
+      "name": "approval.decided",
+      "version": 1
+    },
+    "filter": [
+      {
+        "path": "payload.outcome",
+        "op": "eq",
+        "value": "rejected"
+      }
+    ],
+    "handler": {
+      "type": "workflow",
+      "ref": "flow_notify_requester"
+    }
+  },
+  "sampleEvent": {
+    "id": "evt_1",
+    "name": "approval.decided",
+    "version": 1,
+    "workspaceId": "ws-finance",
+    "occurredAt": "2026-11-20T10:00:00Z",
+    "actor": {
+      "sub": "u_admin",
+      "role": "admin"
+    },
+    "resource": {
+      "type": "approval",
+      "id": "apr_01"
+    },
+    "payload": {
+      "approvalId": "apr_01",
+      "runId": "run_03",
+      "flowId": "flow_invoices",
+      "outcome": "rejected",
+      "decidedBy": "u_admin",
+      "note": "Amount exceeds budget"
+    },
+    "dataCategories": [
+      "CONTACT"
+    ]
+  }
+}

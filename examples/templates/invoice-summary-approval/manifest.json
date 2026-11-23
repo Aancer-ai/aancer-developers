@@ -1,0 +1,33 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.invoice-summary",
+  "version": "1.0.0",
+  "title": "Invoice summary with approval",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": false
+    }
+  ],
+  "items": [
+    {
+      "kind": "template",
+      "schemaVersion": 1,
+      "id": "invoice-summary-approval",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/invoice-summary-approval.json"
+      }
+    }
+  ]
+}

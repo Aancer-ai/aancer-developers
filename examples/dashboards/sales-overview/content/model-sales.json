@@ -1,0 +1,88 @@
+{
+  "id": "sales",
+  "title": "Sales",
+  "entities": {
+    "orders": {
+      "dataset": "sales_orders"
+    },
+    "regions": {
+      "dataset": "regions"
+    }
+  },
+  "dimensions": {
+    "date": {
+      "entity": "orders",
+      "column": "date",
+      "label": "Date",
+      "granularity": [
+        "day",
+        "month",
+        "quarter"
+      ]
+    },
+    "order_id": {
+      "entity": "orders",
+      "column": "order_id",
+      "label": "Order"
+    },
+    "region": {
+      "entity": "orders",
+      "column": "region",
+      "label": "Region"
+    },
+    "product": {
+      "entity": "orders",
+      "column": "product",
+      "label": "Product"
+    },
+    "manager_team": {
+      "entity": "regions",
+      "column": "manager_team",
+      "label": "Manager team"
+    }
+  },
+  "measures": {
+    "revenue": {
+      "entity": "orders",
+      "agg": "sum",
+      "column": "amount",
+      "label": "Revenue",
+      "format": "currency"
+    },
+    "units": {
+      "entity": "orders",
+      "agg": "sum",
+      "column": "units",
+      "label": "Units",
+      "format": "integer"
+    },
+    "orders": {
+      "entity": "orders",
+      "agg": "count",
+      "label": "Orders",
+      "format": "integer"
+    }
+  },
+  "filters": {
+    "this_month": {
+      "dimension": "date",
+      "op": "in_period",
+      "value": "current_month",
+      "label": "This month"
+    }
+  },
+  "joins": [
+    {
+      "id": "by_region",
+      "left": {
+        "entity": "orders",
+        "column": "region"
+      },
+      "right": {
+        "entity": "regions",
+        "column": "region"
+      },
+      "type": "left"
+    }
+  ]
+}

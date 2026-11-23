@@ -1,0 +1,14 @@
+{
+  "name": "@aancer/piece-example-echo",
+  "version": "0.1.0",
+  "description": "Echoes its input back. Useful to test connector install.",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "license": "MIT",
+  "dependencies": {
+    "@activepieces/pieces-framework": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

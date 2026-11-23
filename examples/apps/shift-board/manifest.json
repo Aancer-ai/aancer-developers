@@ -1,0 +1,70 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.shift-board",
+  "version": "1.0.0",
+  "title": "Shift board",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": true
+    }
+  ],
+  "items": [
+    {
+      "kind": "app",
+      "schemaVersion": 2,
+      "id": "shift-board",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "id": "shift-board",
+        "title": "Shift board",
+        "icon": "Table",
+        "group": "Operations",
+        "order": 31,
+        "url": "https://board.example.com/index.html",
+        "origin": "https://board.example.com",
+        "sso": {
+          "mode": "none"
+        },
+        "capabilities": [
+          "read:dataset:shift_plan"
+        ],
+        "egress": {
+          "hosts": []
+        },
+        "embed": {
+          "sandbox": [
+            "allow-scripts",
+            "allow-same-origin"
+          ]
+        }
+      }
+    },
+    {
+      "kind": "link",
+      "schemaVersion": 1,
+      "id": "hr-intranet",
+      "scope": "workspace",
+      "workspace": "{{param.target_workspace}}",
+      "spec": {
+        "id": "hr-intranet",
+        "label": "HR intranet",
+        "url": "https://intranet.example.com/hr",
+        "group": "Operations",
+        "order": 90,
+        "openIn": "new-tab"
+      }
+    }
+  ]
+}

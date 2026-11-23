@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shift board</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    td, th { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Shift board</h1>
+  <p id="status">Loading...</p>
+  <table id="plan" hidden>
+    <thead><tr><th>Date</th><th>Shift</th><th>Person</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script src="bridge.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

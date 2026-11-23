@@ -1,0 +1,33 @@
+{
+  "v": 2,
+  "kind": "bundle",
+  "id": "acme.request-intake",
+  "version": "1.0.0",
+  "title": "Request intake",
+  "publisher": {
+    "name": "Acme Example Ltd",
+    "keyId": "pub-0123456789ab"
+  },
+  "requires": {
+    "platform": ">=1.0.0"
+  },
+  "parameters": [
+    {
+      "id": "target_workspace",
+      "type": "workspace",
+      "label": "Workspace",
+      "required": false
+    }
+  ],
+  "items": [
+    {
+      "kind": "template",
+      "schemaVersion": 1,
+      "id": "request-intake",
+      "scope": "install",
+      "spec": {
+        "$ref": "content/request-intake.json"
+      }
+    }
+  ]
+}
