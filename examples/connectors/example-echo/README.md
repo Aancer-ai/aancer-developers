@@ -7,9 +7,9 @@ Connector packs are signed by AANCER through certification. You submit the sourc
 Files:
 
 - `package.json`: the package name must be `@aancer/piece-<name>` and the version strict `x.y.z`.
-- `src/index.ts`: the connector, written with the pieces framework.
+- `src/index.ts`: the connector, written with the AANCER connector framework (`@aancer/connector-framework`, which ships with the aancer-pack connector kit).
 - `pack.json`: catalog name, description, category and the hosts the connector may reach (`egressHosts`). This one needs no network, so the list is empty.
-- `manifest.json` and `content/connector.json`: what the certified pack manifest and connector item look like. The `archive` file `content/piece.tar` and the signature are produced by certification.
+- `manifest.json` and `content/connector.json`: the shape of the certified pack manifest and connector item. Certification fills in the real values: the platform `keyId`, the `sha256` of `content/piece.tar`, `framework`, `deps` and `build`, and produces the archive and the signature. The values here are placeholders, so this folder is the source you submit, not a pack you can import.
 
 Rules for your own connector:
 

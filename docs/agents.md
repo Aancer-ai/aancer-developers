@@ -100,6 +100,7 @@ No other fields are allowed.
 | `web` | a tool name such as `search`. The pack must declare a data flow with `destination: "web-search"` |
 | `connector` | a connector name, optionally with an action: `name` or `name.action`. Letters, digits, `_ . @ / -` |
 | `dataset`, `frame` | the platform tool's action name, for example `append` or `render` |
+| `fn` | the item id of a `function` item in the same pack |
 
 `code` and `mcp` tools cannot be part of a blueprint.
 
@@ -117,7 +118,7 @@ A reference that cannot be filled is left out and listed in `skipped[]` with the
 
 ### Agent configuration (REST)
 
-Send it with `PUT /api/agents/{id}/draft` as `{ "config": { ... } }`. Saving a draft refuses malformed values. Publishing also refuses missing values and tools that are not available.
+Send it with `PUT /api/agents/{id}/draft` as `{ "config": { ... } }`, at most 200,000 bytes. Saving a draft refuses malformed values. Publishing also refuses missing values and tools that are not available.
 
 | Field | Type | Required | Rules | Default |
 |---|---|---|---|---|
@@ -128,20 +129,20 @@ Send it with `PUT /api/agents/{id}/draft` as `{ "config": { ... } }`. Saving a d
 | `input` | object | yes | `{kind: "prompt"}` or `{kind: "form", fields: [...]}` with 1 to 40 fields | `{kind: "prompt"}` |
 | `starters` | string[] | yes | at most 12, each 1 to 500 characters | `[]` |
 | `output` | object | no | `{fields: [...]}`, 1 to 50 fields | |
-| `limits` | object | yes | `maxSteps` (at most 200), `maxToolCalls` (at most 500), `maxUsd` (at most 1000), `maxWallMs` (at most 86,400,000). All above 0 | `12, 20, 1, 300000` |
+| `limits` | object | yes | `maxSteps` (at most 200), `maxToolCalls` (at most 500), `maxUsd` (at most 1000), `maxWallMs` (at most 86,400,000). All above 0; all except `maxUsd` are whole numbers | `12, 20, 1, 300000` |
 | `approval.confirmWrites` | string | yes | `always` or `workspace_default` | `always` |
 | `art22.automatedDecisionMaking` | string | yes | `none`, `assistive`, `decisive` | `none` |
 | `art22.humanOversightRequired` | boolean | yes | must be `true` when `decisive` | `true` |
 | `personaId` | string or null | no | a persona id of the installation | |
 | `memory.perUser` | boolean | no | opt-in memory per user | |
-| `skills` | string[] | no | skill ids visible in the workspace, always loaded for this agent | |
+| `skills` | string[] | no | skill ids visible in the workspace, no duplicates, always loaded for this agent | |
 
 Rule: when `automatedDecisionMaking` is not `none`, or `humanOversightRequired` is `true`, `confirmWrites` must be `always`.
 
 Tool entries are `{ kind, id, fields?, connection? }`:
 
 - `kind`: `connector`, `knowledge`, `workflow`, `mcp`, `agent`, `code`, `web`, `frame`, `dataset`, `fn`.
-- `id`: for `connector`, `<connector name>` or `<connector name>.<action>`; for `knowledge`, a knowledge set id; for `workflow`, a workflow id; for `agent`, an agent id; for platform tools, the action name. `"*"` (every tool of that kind) is allowed only for `connector`, `knowledge`, `workflow` and `mcp`.
+- `id`: for `connector`, `<connector name>` or `<connector name>.<action>`; for `knowledge`, a knowledge set id; for `workflow`, a workflow id; for `agent`, an agent id; for platform tools, the action name. `"*"` (every tool of that kind) is allowed only for `connector`, `knowledge`, `workflow` and `mcp`, and only as the whole id: `slack.*` or `*` for any other kind is refused.
 - `fields`: `{ "<input>": { "mode": "fixed" | "preselected", "value": ... } }`. A `fixed` field needs a value.
 - `connection`: `{ "mode": "user" }` or `{ "mode": "preselected", "id": "<connection id>" }`.
 
@@ -270,13 +271,14 @@ curl -X POST https://aancer.example.com/api/agents/$AGENT_ID/publish \
 | `PUT /api/agents/{id}/draft {config, ifUpdatedAt?}` | `agents.edit_own` | saves the configuration |
 | `PATCH /api/agents/{id}` | `agents.edit_own` | name, description, icon, up to 3 labels |
 | `GET /api/agents/{id}/publish-preview` | `agents.publish_own` | shows what publishing would certify |
-| `POST /api/agents/{id}/publish {changeNote?}` | `agents.publish_own` | returns `{version, passportId, configHash, warnings}` |
-| `GET /api/agents/{id}/versions`, `POST /api/agents/{id}/versions/{n}/restore`, `GET /api/agents/{id}/diff?from=&to=` | | versions |
+| `POST /api/agents/{id}/publish {changeNote?, modelEgress?}` | `agents.publish_own` | returns `{version, passportId, configHash, warnings}`. `modelEgress` is `{scope: "in-perimeter"}` or `{scope: "listed", destinations: [<host>...]}` |
+| `GET /api/agents/{id}/versions`, `GET /api/agents/{id}/diff?from=&to=` | `agents.edit_own` | versions and differences |
+| `POST /api/agents/{id}/versions/{n}/restore {changeNote?, modelEgress?}` | `agents.publish_own` | publishes an older version again |
 | `POST /api/agents/{id}/export-for-submission` | `agents.publish_own` and edit access | see below |
 
 ### Export an agent as a blueprint pack
 
-`POST /api/agents/{id}/export-for-submission` with `{"packId":"acme.support-triage","licence":"Apache-2.0","ownsRights":true,"noProhibitedPractice":true}` returns a signed one-item blueprint pack, made from the published version. Add `"preview": true` to see the content first. Knowledge, workflow and agent tools become pack parameters. Connections, fixed field values, skills, the form, output, limits, memory and persona are not exported. A tool wildcard, a fixed model route, a code or MCP tool, or anything that looks like a credential stops the export.
+`POST /api/agents/{id}/export-for-submission` with `{"packId":"acme.support-triage","licence":"Apache-2.0","ownsRights":true,"noProhibitedPractice":true}` returns a signed one-item blueprint pack, made from the published version. Add `"preview": true` to see the content first. Knowledge, workflow and agent tools become pack parameters. Connections, fixed field values, skills, the form, output, limits, memory and persona are not exported. A tool wildcard, a fixed model route, a code, MCP or `fn` tool, a missing description, empty instructions, or anything that looks like a credential stops the export with `AGENT_EXPORT_REFUSED` and a `reason`.
 
 ### Certified agents
 
@@ -298,6 +300,10 @@ Blueprint import errors appear as `PACK_SCHEMA_INVALID` details with the path `/
 | `AGENT_BLUEPRINT_WEB_UNDECLARED` | web search needs a declared data flow with the destination "web-search" | Add the data flow to `declarations` |
 | (shape) | must NOT have additional properties / must NOT have more than 12 items | Fix shape errors first; the other checks run after them |
 | `AGENT_BLUEPRINT_NOT_AVAILABLE` | This blueprint is no longer available: its pack was retired or withdrawn. | Activate the pack again |
+| `AGENT_BLUEPRINT_INVALID` (422) | blueprintId must name a blueprint of an installed pack. | Use `pack:<packId>:<itemId>` of an active pack |
+| `AGENT_EXPORT_REFUSED` (422, 403, 503) | The agent cannot be exported: ... | Fix what `reason` names; 403 means you need edit access to the agent |
+| `COMPLIANCE_RULE_FAILED` (422) | Compliance rule failed: ... | Change the configuration so the installation's compliance rule passes |
+| `AGENT_DRAFT_INVALID` | Duplicate skill. / ... must be a whole number. / Draft exceeds 200000 bytes | Fix the configuration |
 | `AGENT_DRAFT_INVALID` | Instructions are required. / Choose exactly one of a model tier or a route. | Fix the configuration |
 | `AGENT_DRAFT_INVALID` | A wildcard is only allowed for all connectors, knowledge, workflows or MCP tools. | Name the tool |
 | `AGENT_DRAFT_INVALID` | This agent makes automated decisions or requires human oversight, so writes must be confirmed by a person. Set write confirmation to always. | `"confirmWrites": "always"` |

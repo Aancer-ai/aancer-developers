@@ -117,7 +117,7 @@ Do not send `derived`. The installation computes it.
 | `type` | string | yes | `connection`, `knowledgeSet`, `agent`, `persona`, `dataset`, `approvers`, `secret`, `string`, `number`, `boolean`, `select` |
 | `label` | string | yes | not empty |
 | `help` | string | no | |
-| `required` | boolean | yes | |
+| `required` | boolean | no | |
 | `default` | string, number or boolean | no | must match the type. Not allowed for `connection`, `knowledgeSet`, `agent`, `persona`, `dataset`, `approvers`, `secret` |
 | `options` | string[] | for `select` | at least one; a `select` default must be one of them |
 | `connector` | string | no | for `connection`: the connector it must belong to |
@@ -158,9 +158,9 @@ Exactly one step has `type: "trigger"`, and `flow.rootStepId` points at it. Ther
 | `agent` | **`agentGoal`**, `agentToolRefs`, `agentMaxSteps` (1 to 50, default 10), `agentMaxBudgetUsd` (default 1.00), `agentRequireApproval` (default true), `agentOutputFields` |
 | `connector` | **`connectorPiece`** (connector name), `connectorAction`, `connectorInputs` |
 | `approval` | `approvalMessage`, `approvalReasoning`, `approvalTimeout` (hours, default 24), `approvalOnReject` (`stop`, `continue`), plus an `approvers` binding |
-| `condition` | `conditionExpression`, `branches [{id, label, nextStepId}]` |
-| `router` | `routingInstructions`, `routerBranches [{id, label, nextStepId, isDefault}]` with exactly one default |
-| `ai-router` | `routerInput`, `routerQuestion`, `routerRoutes [{id, label, description}]` (2 to 12, ids unique, not `otherwise`), `routerMode` (`single`, `multi`), `routerConfidenceFloor` (0 to 1) |
+| `condition` | **`conditionExpression`**, **`branches [{id, label, nextStepId}]`** (at least one) |
+| `router` | **`routingInstructions`**, **`routerBranches [{id, label, nextStepId, isDefault}]`** with exactly one default |
+| `ai-router` | **`routerInput`**, **`routerQuestion`**, **`routerRoutes [{id, label, description}]`** (2 to 12, ids unique and not empty, not `otherwise`; every edge must be a declared route), `routerMode` (`single`, `multi`), `routerConfidenceFloor` (0 to 1) |
 | `loop` | **`loopExpression`**, `loopBodyStepId` |
 | `code` | `codeLanguage` (`javascript`, `python`), `codeSource`, `codeInputs {name: "{{ref}}"}` |
 | `guardrails` | `guardTarget`, `guardOnFail` (`block`, `annotate`) |
@@ -174,7 +174,7 @@ A step with `dataClassification: "sovereign"` cannot use `modelTier: "cloud-reas
 
 If the template has AI steps (`aancer-ai`, `rag`, `agent`, `router`, `ai-router`), set `aiAct.riskClass` to `minimal`, `limited` or `high` and fill `aiAct.intendedPurpose`.
 
-AANCER treats a template as high risk when `riskClass` is `high`, or when its industry, name or description refers to employment or education topics: for example HR, hiring, recruiting, candidates, screening, onboarding, offboarding, performance reviews, students, grading or exams. A high-risk template with AI steps needs `aiAct.annexIiiCategory` (not `none`) and `aiAct.humanOversight`, and should contain an approval step. Choose your wording with this in mind.
+AANCER treats a template as high risk when `riskClass` is `high`, or when its industry, name or description (including translations) contains one of these terms: `hr` (as a word), `rrhh`, `talent`, `employ`, `hiring`, `recruit`, `candidate`, `screen`, `performance review`, `offboard`, `onboard`, `education`, `edu` (as a word), `proctor`, `grading`, `student`, `exam`. The match is a plain substring test, so words such as "screenshot", "employee" and "example" also count. A high-risk template with AI steps needs `aiAct.annexIiiCategory` (not `none`) and `aiAct.humanOversight`, and should contain an approval step. If the declared `riskClass` is lower than this rule derives, you get the warning `TPL_RISK_DECLARED_BELOW_DERIVED` and the template is treated as high risk.
 
 ### What the installation works out for you
 
@@ -301,15 +301,15 @@ You can also build a workflow in the designer and turn it into a template.
 |---|---|---|
 | Create a workflow from JSON | `POST /api/automations` with `{name, workspaceId, status: "draft", rootStepId, steps}` | Automations > Designer |
 | Create a template draft from it | `POST /api/automations/templates/authored {workspaceId, fromFlowId, name?, locale?}` | Automations > Templates > New |
-| Edit details | `PUT /api/automations/templates/authored/{id} {rev, record?, parameters?, bindings?, translations?}` | template editor |
+| Edit details | `PUT /api/automations/templates/authored/{id} {rev, record?, parameters?, bindings?, translations?, valueChoices?}` | template editor |
 | Validate | `POST /api/automations/templates/authored/{id}/validate` returns `{ok, errors[], warnings[]}` | |
-| Submit for review | `POST .../{id}/submit {targetScope: "workspace" or "install", note?}` | |
-| Approve or reject | `POST .../{id}/approve {note?, riskClassConfirmed: true}`, `POST .../{id}/reject {note}` | Automations > Template reviews |
+| Submit for review | `POST .../{id}/submit {rev, targetScope: "workspace" or "install", note?}` | |
+| Approve or reject | `POST .../{id}/approve {rev, note?, riskClassConfirmed?}`, `POST .../{id}/reject {rev, note}` | Automations > Template reviews |
 | Export as a pack | `POST .../{id}/export {}` returns a signed `.ancpack` | |
 
-The `validate` call is the quickest way to check a template while you build it. Authors cannot approve their own templates. Each user can hold at most 100 unpublished drafts per workspace.
+Every write (`PUT`, `submit`, `approve`, `reject`) needs the integer `rev` you last read; a stale or missing `rev` returns `TEMPLATE_REV_CONFLICT`. `riskClassConfirmed: true` is needed on approve only when the template has AI steps. The `validate` call is the quickest way to check a template while you build it. Authors cannot approve their own templates when the target is the whole installation and the installation's second-approver setting is on. Each user can hold at most 100 unpublished drafts per workspace.
 
-An exported pack is signed with the installation's export key. To import it into a second installation, that installation adds the first one's export key under Trust keys.
+An exported pack is signed with the installation's export key. To move it to a second installation, open **Platform Settings > Extensions > Trust keys** on the first one and choose **Show key for another installation**. On the second installation, add a trust key and paste it: the key id is filled in for you.
 
 ## Common errors
 
@@ -331,8 +331,14 @@ Pack import errors appear as `PACK_SCHEMA_INVALID` details with the path `/items
 | `TPL_PROHIBITED` | A template for a prohibited practice cannot be shared. | |
 | `TPL_TOO_LARGE` | The template is larger than 1 MB. / at most 200 steps / at most 50 parameters | Split it |
 | `TPL_PACK_WORKSPACE` | must be a pack parameter, written as {{param.<id>}} | Use a `workspace` pack parameter |
+| `TPL_PACK_WORKSPACE_UNKNOWN` | the workspace it is bound to (...) does not exist here or is archived. | Bind an existing workspace at activation |
+| `TPL_PACK_UNREADABLE` | its content could not be read. | Rebuild and re-sign the pack |
+| `TPL_PARAM_DUPLICATE` | Two parameters share the id "...". | Make parameter ids unique |
+| `TPL_FIELD_MODE` | a step field uses a field mode that is not allowed | Use one of the field modes the designer offers |
+| `TPL_GUARD_MODE` | a guardrail or file-search step uses a mode that is not allowed | Use one of the modes the designer offers |
+| `TEMPLATE_REV_CONFLICT` | the template changed since you read it | Read it again and send the new `rev` |
 
-Warnings do not block: `TPL_PARAM_UNUSED`, `TPL_CODE_STEP_PRESENT` (whoever deploys it runs that code), `TPL_PII_FOUND` (an e-mail address, phone number or IBAN in the text), `TPL_NO_HUMAN_OVERSIGHT_STEP`, `TPL_TRANSLATION_INCOMPLETE`.
+Warnings do not block: `TPL_RISK_DECLARED_BELOW_DERIVED` (see the high-risk rule above), `TPL_CATALOG_DRIFT` (the connector catalog changed since the template was built: update it from its workflow), `TPL_PARAM_UNUSED`, `TPL_CODE_STEP_PRESENT` (whoever deploys it runs that code), `TPL_PII_FOUND` (an e-mail address, phone number or IBAN in the text), `TPL_NO_HUMAN_OVERSIGHT_STEP`, `TPL_TRANSLATION_INCOMPLETE`.
 
 ## Limits and editions
 

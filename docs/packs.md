@@ -152,9 +152,9 @@ Reference a parameter as the whole string `{{param.<id>}}` anywhere in a spec or
 |---|---|---|
 | `path` | string | starts with `content/`, no `..` |
 | `sha256` | string | 64 lower-case hex characters |
-| `contentType` | string | `font/woff2`, `image/png`, `image/svg+xml`, `image/jpeg`, `image/x-icon` |
+| `contentType` | string | `font/woff2`, `image/png`, `image/svg+xml`, `image/jpeg`, `image/x-icon`. `application/x-tar` only as the `archive` of a connector item |
 
-`aancer-pack sign` lists every binary file for you. Each asset is at most 4 MiB.
+`aancer-pack sign` lists every binary file for you. Each asset is at most 4 MiB. A connector archive is at most 96 MiB.
 
 ### Catalog blocks
 
@@ -180,8 +180,8 @@ You only need `listing` and `declarations` to submit a pack to the certified cat
 | Field | Rules |
 |---|---|
 | `v` | `1` |
-| `licence` | an SPDX id (for example `MIT`, `Apache-2.0`, `BSD-3-Clause`, `MPL-2.0`, `GPL-3.0-only`) or `LicenseRef-<name>` |
-| `thirdParty` | at most 256 of `{ name, licence }` |
+| `licence` | one of `0BSD`, `AGPL-3.0-only`, `AGPL-3.0-or-later`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `BSL-1.0`, `CC-BY-4.0`, `CC-BY-SA-4.0`, `CC0-1.0`, `EPL-2.0`, `EUPL-1.2`, `GPL-2.0-only`, `GPL-2.0-or-later`, `GPL-3.0-only`, `GPL-3.0-or-later`, `ISC`, `LGPL-2.1-only`, `LGPL-2.1-or-later`, `LGPL-3.0-only`, `LGPL-3.0-or-later`, `MIT`, `MIT-0`, `MPL-2.0`, `OFL-1.1`, `Unlicense`, `Zlib`, or `LicenseRef-<name>` (`<name>`: 1 to 64 letters, digits, `.` or `-`) |
+| `thirdParty` | at most 256 of `{ name, licence }`. `licence` follows the same rule |
 | `egress` | at most 64 of `{ host, port, purpose }`. `host` is a lower-case DNS name, no wildcard, no IP address |
 | `dataFlows` | at most 32 of `{ purpose, data[], personalData, destination, host? }`. `destination` is `installation`, `external` or `web-search`. An `external` flow names a `host` that is also listed in `egress` |
 | `aiUse` | `{ intendedPurpose (1 to 500), annexIII (boolean), humanOversight (1 to 120) }` |
@@ -266,17 +266,20 @@ A catalog pack id is `<publisherId>.<name>`. `publisherId` matches `^[a-z0-9][a-
 
 ### The aancer-pack CLI
 
-The `aancer-pack` CLI is available as a download for partners and builders. It needs Node 20 or newer and has no other dependencies.
+The `aancer-pack` CLI is available to partners and builders on request: [contact us](https://aancer.ai/contact). It needs Node 20 or newer and has no other dependencies.
 
 | Command | What it does |
 |---|---|
 | `aancer-pack keygen --out acme.key` | makes an Ed25519 key pair (`acme.key`, `acme.pub`) and prints your key id `pub-<12 hex>`. Never overwrites a key |
 | `aancer-pack sign manifest.json content/ -o <file>.ancpack --key acme.key` | builds the signing form, zips and signs |
-| `aancer-pack verify <file>.ancpack --pubkey acme.pub` | checks the signature, prints OK |
+| `aancer-pack verify <file>.ancpack --pubkey acme.pub [--publisher-pubkey acme.pub]` | checks the signature, prints OK. `--publisher-pubkey` also checks the publisher signature of a certified pack |
 | `aancer-pack inspect <file>.ancpack` | shows id, version, items and content hash |
-| `aancer-pack lint manifest.json content/` | checks catalog readiness, prints one `<path>: <what to change>` line per problem |
+| `aancer-pack mirror --from <catalog address> --to <dir> --pubkey platform.pub` | copies the certified catalog and its packs into a folder, verified, for a mirror inside your own network |
+| `aancer-pack lint manifest.json content/` or `aancer-pack lint <file>.ancpack` | checks catalog readiness, prints one `<path>: <what to change>` line per problem. Add `--json` for machine-readable output |
 
-Exit codes: `0` ok, `2` invalid input or usage, `3` signature or verification refused, `4` not approved.
+Exit codes: `0` ok, `2` invalid input or usage, `3` signature or verification refused.
+
+`lint` also demands `publisher.name` (1 to the name limit) and a `publisher.keyId` in one of the forms `pub-<12 hex>`, `inst-<12 hex>` or `install`.
 
 Put the `pub-<12 hex>` id that `keygen` prints into `publisher.keyId`. Keep the `.key` file private. Share only the `.pub` file.
 
@@ -299,11 +302,13 @@ An installation accepts a pack when one of these keys verifies it:
 2. the installation's own export key (`inst-<12 hex>`), for templates, agents and dashboards exported from that installation;
 3. a partner key that an administrator added under **Platform Settings > Extensions > Trust keys**. The manifest's `publisher.keyId` must equal the key id the administrator entered.
 
+A pack signed by the installation's own key always verifies with that key and is not affected by catalog withdrawals. A pack whose signer is known but whose signature does not match is refused with `PACK_SIGNATURE_INVALID`.
+
 Connector packs are accepted only with the AANCER platform key. Partners submit connectors for certification and AANCER signs them. See [Connectors](/developers/connectors).
 
 ## Install and test
 
-There is no validate-only API yet. To test a pack, import it into an EVAL or test workspace. Import checks everything and installs nothing. Only activation changes the installation.
+To test a pack, import it into an EVAL or test installation. Import is installation-wide: it checks everything and installs nothing. Only activation changes the installation. A pack that contains workflow templates also passes the template permission check on activate and rollback.
 
 ### In the UI
 
@@ -312,7 +317,7 @@ There is no validate-only API yet. To test a pack, import it into an EVAL or tes
 3. **Activate**. Fill in the parameters.
 4. Later: **Roll back** to an older version, or **Retire** to uninstall.
 
-You need the `extensions.manage` permission. `extensions.manage_own` is enough for a pack whose items are all workspace-scoped and target workspaces you manage.
+Importing needs the `extensions.manage` permission. Activating a pack whose items are all workspace-scoped and target workspaces you manage also works with `extensions.manage_own`.
 
 ### With the REST API
 
@@ -335,14 +340,40 @@ curl -X POST https://aancer.example.com/api/extensions/packs/acme.sales-dashboar
 
 | Call | What it does |
 |---|---|
-| `POST /api/extensions/packs/import` | raw `.ancpack` bytes. Returns `201` (new) or `200` with a summary: items, parameters, warnings, `upgradeFrom` |
-| `POST /api/extensions/packs/{packId}/activate` | `{ "version": "...", "parameters": { "<id>": "<value>" } }` |
+| `POST /api/extensions/packs/import` | raw `.ancpack` bytes, optionally `?activate=1`. Returns `201` (new) or `200` with a summary: items, parameters, warnings, `upgradeFrom`, and when relevant `certification`, `revocation`, `keptBehind` |
+| `POST /api/extensions/packs/{packId}/activate` | `{ "version": "...", "parameters": { "<id>": "<value>" } }`. A `null` value unbinds an optional parameter |
 | `POST /api/extensions/packs/{packId}/rollback` | `{ "version": "..." }` |
 | `POST /api/extensions/packs/{packId}/retire` | uninstall |
 | `GET /api/extensions/packs`, `GET /api/extensions/packs/{packId}` | list and detail |
 | `GET /api/extensions/objects` | installed objects, filter by `kind`, `workspaceId`, `state`, `packId` |
 | `GET /api/extensions/schemas` | supported kinds and schema versions |
-| `GET`, `POST`, `DELETE /api/extensions/trust-keys` | manage trust keys |
+| `GET /api/extensions/trust-keys` | list trust keys |
+| `POST /api/extensions/trust-keys` | add a key, answers `201` |
+| `DELETE /api/extensions/trust-keys/{keyId}` | remove a key, answers `204` |
+
+### The certified catalog in your installation
+
+Certified packs are listed in the installation's catalog. An administrator opens a listing and chooses **Get** to import it; a newer certified version shows **Update available**. The installation receives the catalog over its catalog channel. Installations without direct internet access upload the signed catalog file (`catalog-snapshot.json`) by hand, or point the channel at a mirror in their own network built with `aancer-pack mirror`.
+
+| Call | Permission | What it does |
+|---|---|---|
+| `GET /api/marketplace/certified/status` | `marketplace.view` | channel status and last refresh |
+| `PUT /api/marketplace/certified/settings` | `extensions.manage` | catalog channel settings |
+| `POST /api/marketplace/certified/refresh` | `extensions.manage` | fetch the catalog now |
+| `POST /api/marketplace/certified/snapshot` | `extensions.manage` | upload a catalog file (raw body, up to 8 MiB) |
+| `GET /api/marketplace/certified/items`, `/items/{packId}`, `/facets` | `marketplace.view` | browse listings, kinds and available updates |
+| `POST /api/marketplace/certified/items/{packId}/get` | `marketplace.import_pack` | import a listed pack |
+
+### Withdrawn versions
+
+AANCER can withdraw a certified pack version, for example after a security finding, and names the version that fixes it. A withdrawn version is no longer imported (`PACK_REVOKED`). For a critical withdrawal the installation stops the installed version (a forced stop); otherwise the version is flagged for the administrator. Where the installation allows it, an administrator can record a decision to keep a withdrawn version running, with a reason, and end that decision later:
+
+| Call | Body |
+|---|---|
+| `POST /api/extensions/packs/{packId}/revocation-override` | `{ version, reason }` |
+| `DELETE /api/extensions/packs/{packId}/revocation-override` | `{ version }` |
+
+Both need `extensions.manage`. Activating a newer version ends the decision for older ones.
 
 ### Offline install
 
@@ -354,32 +385,41 @@ A pack id plus version is permanent. Importing the same version again with the s
 
 ## Common errors
 
-| Code | Message | Fix |
-|---|---|---|
-| `PACK_UNSIGNED` | This pack is not signed (MANIFEST.sig is missing). | Sign it with `aancer-pack sign` |
-| `PACK_MALFORMED` | The pack could not be read. / MANIFEST.json is missing | Rebuild the ZIP with the CLI |
-| `PACK_SIGNATURE_INVALID` | This pack could not be verified, the signature is invalid. | A file changed after signing, a file under `content/` is not referenced or listed, or `publisher.keyId` names another key. Re-sign after every change |
-| `PACK_SIGNER_UNKNOWN` | This pack was signed by an unknown key (pub-...). Add the publisher's key under Extensions > Trust keys first. | The administrator adds your public key with the same key id |
-| `PACK_SIGNER_NOT_ALLOWED` | Connector packs must be signed by the platform key. | Submit connectors for certification |
-| `PACK_SCHEMA_INVALID` | The pack failed validation: `<path>: <message>` | Fix the field at the path. Item errors use `/items/<itemId>/spec/...` |
-| `PACK_SCHEMA_INVALID` | `/parameters: parameter 'x' is referenced but not declared` | Declare it in `parameters` |
-| `PACK_SCHEMA_INVALID` | `/items/0/scope: agent-blueprint items are install-scoped` | Use `"scope": "install"` |
-| `PACK_SCHEMA_INVALID` | `/items/0/workspace: required for workspace scope` | Add `workspace` or use install scope |
-| `PACK_SCHEMA_INVALID` | `/version: must be strict semver` | Use `1.0.0`, not `1.0` or `v1.0.0` |
-| `EXTENSION_KIND_UNKNOWN` | This platform does not know the extension kind '...'. | Use a kind from the table above |
-| `PACK_PLATFORM_INCOMPATIBLE` | This pack needs platform version ...; this installation runs ... | Lower `requires.platform`, or the installation upgrades |
-| `PACK_VERSION_CONFLICT` | Pack ... is already imported with different content. Bump the version. | Bump `version` |
-| `PACK_TOO_LARGE` | This file is larger than the ... MB limit for one pack on this installation. | Keep the file under 64 MiB and the unzipped content under 32 MiB |
-| `PACK_PARAMETER_MISSING` | Required parameters are missing: ... | Send them at activation, or set `"required": false` |
-| `PACK_PARAMETER_INVALID` | Parameter values are invalid: ... | Send existing ids as strings |
-| `EXTENSION_REFERENCED` | Other active extensions still reference objects in this pack: ... | Remove the dependants first |
+| Code | Status | Message | Fix |
+|---|---|---|---|
+| `PACK_UNSIGNED` | 422 | This pack is not signed (MANIFEST.sig is missing). | Sign it with `aancer-pack sign` |
+| `PACK_MALFORMED` | 400 | The pack could not be read. / MANIFEST.json is missing | Rebuild the ZIP with the CLI |
+| `PACK_SIGNATURE_INVALID` | 400 | This pack could not be verified, the signature is invalid. | A file changed after signing, a file under `content/` is not referenced or listed, or `publisher.keyId` names another key. Re-sign after every change |
+| `PACK_SIGNER_UNKNOWN` | 422 | This pack was signed by an unknown key (pub-...). Add the publisher's key under Extensions > Trust keys first. | The administrator adds your public key with the same key id |
+| `PACK_SIGNER_NOT_ALLOWED` | 403 | Connector packs must be signed by the platform key. | Submit connectors for certification |
+| `PACK_SCHEMA_INVALID` | 422 | The pack failed validation: `<path>: <message>` | Fix the field at the path. Item errors use `/items/<itemId>/spec/...` |
+| `PACK_SCHEMA_INVALID` | 422 | `/parameters: parameter 'x' is referenced but not declared` | Declare it in `parameters` |
+| `PACK_SCHEMA_INVALID` | 422 | `/items/0/scope: agent-blueprint items are install-scoped` | Use `"scope": "install"` |
+| `PACK_SCHEMA_INVALID` | 422 | `/items/0/workspace: required for workspace scope` | Add `workspace` or use install scope |
+| `PACK_SCHEMA_INVALID` | 422 | `/version: must be strict semver` | Use `1.0.0`, not `1.0` or `v1.0.0` |
+| `PACK_SCHEMA_INVALID` | 422 | the unzipped content is larger than the limit | Keep the unzipped content under 32 MiB (128 MiB for a connector pack) |
+| `EXTENSION_KIND_UNKNOWN` | 422 | This platform does not know the extension kind '...'. | Use a kind from the table above |
+| `PACK_PLATFORM_INCOMPATIBLE` | 422 | This pack needs platform version ...; this installation runs ... | Lower `requires.platform`, or the installation upgrades |
+| `PACK_VERSION_CONFLICT` | 409 | Pack ... is already imported with different content. Bump the version. | Bump `version` |
+| `PACK_TOO_LARGE` | 413 | This file is larger than the ... MB limit for one pack on this installation. | Applies to the file size only: keep the file under 64 MiB |
+| `PACK_PARAMETER_MISSING` | 422 | Required parameters are missing: ... | Send them at activation, or set `"required": false` |
+| `PACK_PARAMETER_INVALID` | 422 | Parameter values are invalid: ... | Send existing ids as strings |
+| `EXTENSION_REFERENCED` | 409 | Other active extensions still reference objects in this pack: ... | Remove the dependants first |
+| `PACK_REVOKED` | 403 | This pack version was withdrawn by the platform (...). | Install the version named in the message |
+| `PACK_LICENCE_REQUIRED` | 403 | This connector pack needs an active licence. | Activate the licence, then import again |
+| `PACK_LICENCE_MISMATCH` | 403 | This connector pack was issued for a different licence. | Ask for a pack issued to this installation |
+| `PACK_CONTENT_FORBIDDEN` | 422 | The connector archive contains forbidden content: ... | Remove the named files |
+| `PACK_PIECE_NAME_TAKEN` | 409 | A connector named ... is already installed on this platform. | Use another package name |
+| `EXTENSION_NOT_FOUND` | 404 | ... not found. | Check the pack id or object id |
+| `PACK_NOT_REVOKED` | 409 | This pack version is not withdrawn with a forced stop, so there is nothing to keep running. | Only for versions stopped by a withdrawal |
+| `PACK_REVOCATION_OVERRIDE_FORBIDDEN` | 403 | This installation does not allow a withdrawn pack to keep running. | Install the fixed version |
 
 `aancer-pack lint` adds catalog checks, for example "a submission needs a listing block", "a submission must not carry a certification block" and "pack id must be '<publisher id>.<name>'".
 
 ## Limits and editions
 
 - Pack file: 64 MiB by default. The operator can change it.
-- Unzipped content: 32 MiB per pack. Each asset: 4 MiB. Items: 256 per pack.
+- Unzipped content: 32 MiB per pack, 128 MiB for a pack with a connector. Each asset: 4 MiB; a connector archive (`application/x-tar`): 96 MiB. Items: 256 per pack.
 - Importing and activating packs is controlled by permissions (`extensions.manage`, `extensions.manage_own`).
 - Some item kinds need a licence feature: embedded apps, certified agents and licensed connectors. Each page says so.
 - Check your edition on [aancer.ai/pricing](https://aancer.ai/pricing).

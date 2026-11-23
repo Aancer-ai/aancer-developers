@@ -5,22 +5,80 @@
   "description": "The spec of an app item: a web application you host on your own https origin that AANCER shows in a sandboxed frame. Rules this schema cannot express: origin must equal the origin of url and must differ from the AANCER installation's own origin; the host must not be loopback, link-local or a metadata address; the only placeholder in url is {{workspace}}. The link and card definitions describe the companion items (kind link and kind card, schemaVersion 1).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "title", "url", "origin", "capabilities", "sso"],
+  "required": [
+    "id",
+    "title",
+    "url",
+    "origin",
+    "capabilities",
+    "sso"
+  ],
   "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$", "description": "Use the same value as the item id." },
-    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
-    "icon": { "type": "string", "maxLength": 40, "description": "An icon name such as Clock or Table." },
-    "group": { "type": "string", "maxLength": 40 },
-    "order": { "type": "integer", "minimum": 0 },
-    "url": { "type": "string", "minLength": 9, "maxLength": 2048, "pattern": "^https://[^/@#]+(/[^#]*)?$" },
-    "origin": { "type": "string", "minLength": 9, "maxLength": 253, "pattern": "^https://[^/]+$" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "Use the same value as the item id."
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A workspace id or {{param.<id>}}."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "icon": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "An icon name such as Clock or Table."
+    },
+    "group": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "order": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "url": {
+      "type": "string",
+      "minLength": 9,
+      "maxLength": 2048,
+      "pattern": "^https://[^/@#]+(/[^#]*)?$"
+    },
+    "origin": {
+      "type": "string",
+      "minLength": 9,
+      "maxLength": 253,
+      "pattern": "^https://[^/]+$"
+    },
     "sso": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mode"],
+      "required": [
+        "mode"
+      ],
       "properties": {
-        "mode": { "enum": ["code", "none"], "description": "code: one-time code your server redeems. none: bridge only, no credential." },
-        "scopes": { "type": "array", "maxItems": 2, "uniqueItems": true, "items": { "enum": ["profile", "workspace"] } }
+        "mode": {
+          "enum": [
+            "code",
+            "none"
+          ],
+          "description": "code: one-time code your server redeems. none: bridge only, no credential."
+        },
+        "scopes": {
+          "type": "array",
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "profile",
+              "workspace"
+            ]
+          }
+        }
       }
     },
     "capabilities": {
@@ -40,7 +98,11 @@
         "hosts": {
           "type": "array",
           "maxItems": 20,
-          "items": { "type": "string", "maxLength": 253, "pattern": "^((\\*\\.)?([A-Za-z0-9-]+\\.)+[A-Za-z0-9-]+|[A-Za-z0-9-]+)$" }
+          "items": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^((\\*\\.)?([A-Za-z0-9-]+\\.)+[A-Za-z0-9-]+|[A-Za-z0-9-]+)$"
+          }
         }
       }
     },
@@ -52,7 +114,37 @@
           "type": "array",
           "maxItems": 5,
           "description": "Default allow-scripts, allow-forms, allow-same-origin. Keep allow-scripts and allow-same-origin for the bridge to work.",
-          "items": { "enum": ["allow-scripts", "allow-forms", "allow-same-origin", "allow-popups", "allow-downloads"] }
+          "items": {
+            "enum": [
+              "allow-scripts",
+              "allow-forms",
+              "allow-same-origin",
+              "allow-popups",
+              "allow-downloads"
+            ]
+          }
+        },
+        "height": {
+          "enum": [
+            "full",
+            "auto"
+          ]
+        }
+      }
+    },
+    "csp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "connectSrc": {
+          "type": "array",
+          "maxItems": 10,
+          "description": "https origins the frame may connect to.",
+          "items": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^https://[^/]+$"
+          }
         }
       }
     }
@@ -62,30 +154,90 @@
       "title": "Navigation link (pack item kind link, schemaVersion 1)",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "url"],
+      "required": [
+        "id",
+        "label",
+        "url"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
-        "label": { "type": "string", "minLength": 1, "maxLength": 80 },
-        "url": { "type": "string", "minLength": 9, "maxLength": 2048, "pattern": "^https://" },
-        "icon": { "type": "string", "maxLength": 40 },
-        "group": { "type": "string", "maxLength": 40 },
-        "order": { "type": "integer", "minimum": 0 },
-        "openIn": { "enum": ["new-tab"] }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "url": {
+          "type": "string",
+          "minLength": 9,
+          "maxLength": 2048,
+          "pattern": "^https://"
+        },
+        "icon": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "group": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openIn": {
+          "enum": [
+            "new-tab"
+          ]
+        }
       }
     },
     "card": {
       "title": "Home card (pack item kind card, schemaVersion 1)",
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "body", "href"],
+      "required": [
+        "id",
+        "title",
+        "body",
+        "href"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
-        "title": { "type": "string", "minLength": 1, "maxLength": 80 },
-        "body": { "type": "string", "minLength": 1, "maxLength": 280, "pattern": "^[^<>]*$" },
-        "href": { "type": "string", "minLength": 1, "description": "app:<id>, dashboard:<id> or an https URL." },
-        "icon": { "type": "string", "maxLength": 40 },
-        "group": { "type": "string", "maxLength": 40 },
-        "order": { "type": "integer", "minimum": 0 }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "pattern": "^[^<>]*$"
+        },
+        "href": {
+          "type": "string",
+          "minLength": 1,
+          "description": "app:<id>, dashboard:<id> or an https URL.",
+          "maxLength": 2048
+        },
+        "icon": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "group": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

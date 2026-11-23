@@ -117,7 +117,9 @@ JSON Schema: [app.schema.json](https://aancer.ai/dev/schemas/app.schema.json). `
 | `sso` | object | yes | `{ "mode": "code" or "none", "scopes"?: ["profile", "workspace"] }` |
 | `capabilities` | string[] | yes | up to 20, unique. See Capabilities. `[]` is valid |
 | `egress` | object | no | `{ "hosts": [...] }`: up to 20 extra hosts, `api.example.com` or `*.example.com`. Never `*` |
-| `embed` | object | no | `{ "sandbox": [...] }`: up to 5 of `allow-scripts`, `allow-forms`, `allow-same-origin`, `allow-popups`, `allow-downloads` |
+| `embed` | object | no | `{ "sandbox": [...], "height"?: "full" or "auto" }`: `sandbox` takes up to 5 of `allow-scripts`, `allow-forms`, `allow-same-origin`, `allow-popups`, `allow-downloads` |
+| `csp` | object | no | `{ "connectSrc": [...] }`: up to 10 https origins the frame may connect to |
+| `workspace` | string | no | a workspace id or `{{param.<id>}}` |
 
 No other fields are allowed.
 
@@ -168,9 +170,9 @@ The embedded page must allow AANCER to frame it:
 Content-Security-Policy: frame-ancestors https://aancer.example.com
 ```
 
-- Accepted sources: the exact AANCER origin, its host, `*.example.com` or `https://*.example.com` matching the AANCER host, or `*`. `'none'` refuses.
+- Accepted sources: the exact AANCER origin, its host, or `*.example.com` / `https://*.example.com` matching the AANCER host. `'none'` refuses.
 - Do not send `X-Frame-Options: DENY` or `SAMEORIGIN`.
-- AANCER checks this header when the app is activated and when it opens, with a HEAD request (GET as fallback).
+- The AANCER server checks this header when the app is activated and when it opens, with a HEAD request; it sends a GET only when HEAD answers 404 or 405. Redirects are judged as they are, not followed. The result is cached for 5 minutes per origin.
 
 If the check fails because the header is missing or does not allow AANCER, an approved app opens in a new browser tab at its own URL instead of the frame. The bridge does not exist there. If the app cannot be reached, the user sees a retry card.
 
@@ -225,6 +227,7 @@ Writes go through the same path as a workflow Publish step: column checks, quota
 function connect(platformOrigin, codeChallenge) {
   const pending = new Map();
   let nonce = null;
+  const TIMEOUT_MS = 10000; // the shell does not answer a malformed message
   window.addEventListener('message', (event) => {
     if (event.origin !== platformOrigin || event.source !== window.parent) return;
     const msg = event.data;
@@ -234,8 +237,9 @@ function connect(platformOrigin, codeChallenge) {
     if (p) { pending.delete(msg.id); p(msg); }
   });
   function send(msg) {
-    return new Promise((resolve) => {
-      pending.set(msg.id, resolve);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { pending.delete(msg.id); reject(new Error('BRIDGE_TIMEOUT')); }, TIMEOUT_MS);
+      pending.set(msg.id, (answer) => { clearTimeout(timer); resolve(answer); });
       window.parent.postMessage(msg, platformOrigin);
     });
   }
@@ -320,11 +324,13 @@ Answer when valid:
   "exp": 1763640000, "iat": 1763639700 }
 ```
 
-Otherwise `{ "active": false }`. You may cache a positive answer for up to 30 seconds. A token becomes inactive after logout, a password change, a change of the user's access, a withdrawn approval, a retired or updated pack, or when the AANCER tab is closed.
+Otherwise `{ "active": false, "reason"? }` with `reason` `revoked`, `ended`, `expired` or `legacy_disabled`. A wrong or missing app secret gets `401 APP_INTROSPECT_UNAUTHORIZED`; after 20 failed attempts within 60 seconds from one address, `429`. You may cache a positive answer for up to 30 seconds. A token becomes inactive after logout, a password change, a change of the user's access, a withdrawn approval, a retired or updated pack, or about 150 seconds after the AANCER frame stops sending its heartbeat (for example after the tab is closed).
 
 ### 5. Renew
 
-When introspection says inactive and the user is still in the frame, make a new PKCE pair and call `authorize` through the bridge with the new challenge. Redeem the new code. Do not reuse a code: a second redemption ends the user's app session.
+When introspection says inactive and the user is still in the frame, make a new PKCE pair and call `authorize` through the bridge with the new challenge. Redeem the new code. A new code replaces the previous one; a session can request up to 10 codes in 5 minutes. A token obtained with a code lives at most 600 seconds.
+
+If your server repeats the identical token request within 60 seconds (for example because it lost the answer), it gets a new token, the previous one is revoked and the session stays. Any other reuse of a code ends the user's app session with `code_replayed`.
 
 ### Server example (Node.js, no dependencies)
 
@@ -423,7 +429,7 @@ The shell sends `{ type: "session", state: "revoked", reason }` when the app ses
 }
 ```
 
-`link` fields: `id`, `label` (1 to 80), `url` (https), `icon`, `group` (40), `order`, `openIn` (`new-tab` only). `card` fields: `id`, `title` (1 to 80), `body` (1 to 280, plain text, no `<` or `>`), `href` (`app:<id>`, `dashboard:<id>` or an https URL), `icon`, `group`, `order`. Home shows up to 6 cards.
+`link` fields: `id`, `label` (1 to 80), `url` (https), `icon`, `group` (40), `order`, `openIn` (`new-tab` only). `card` fields: `id`, `title` (1 to 80), `body` (1 to 280, plain text, no `<` or `>`), `href` (`app:<id>`, `dashboard:<id>` or an https URL, at most 2048 characters), `icon`, `group`, `order`. Home shows up to 6 cards.
 
 ### Writing rows from the app
 
@@ -457,9 +463,11 @@ The dataset `shift_requests` must exist in the workspace with matching columns. 
 4. **Create app secret**. It is shown once. Give it to the person who runs your app server, for example as the `APP_SECRET` environment variable.
 5. Users open the app from the Dashboards navigation.
 
-The activation also runs the frame check. A warning `APP_EMBED_REFUSED` means your `frame-ancestors` header is missing or wrong.
+The activation also runs the frame check. A warning `APP_EMBED_REFUSED` names the reason: `no_csp` (no `frame-ancestors`), `not_allowed` (AANCER is not among the sources), `xfo` (an `X-Frame-Options` header blocks framing), `unreachable` (the app did not answer) or `egress` (the installation's network rules do not allow the origin).
 
 ### With the REST API
+
+Every app manage call (approve, secret, withdraw, frame check, extra hosts) carries the app's `workspaceId`.
 
 | Step | Call | Permission |
 |---|---|---|
@@ -482,7 +490,7 @@ Bump the pack `version`. A new origin, a new capability or a new identity scope 
 
 ### Testing
 
-Import and activate the pack in an EVAL or test workspace. Open the app, then check: the frame loads (header correct), `hello-ack` arrives (origin correct), each `call` returns `ok: true` (capability approved and user permission present). For sign-in apps, check that your server gets `active: true` from introspection.
+Import and activate the pack in an EVAL or test installation. Open the app, then check: the frame loads (header correct), `hello-ack` arrives (origin correct), each `call` returns `ok: true` (capability approved and user permission present). For sign-in apps, check that your server gets `active: true` from introspection.
 
 ## Common errors
 
@@ -511,7 +519,9 @@ Runtime errors:
 | `APP_NOT_FOUND` | App '...' is not active in this workspace. | Activate the pack for this workspace |
 | `APP_ORIGIN_UNAPPROVED`, `APP_CAPABILITIES_CHANGED` | App '...' has changes an administrator must approve first. | Approve under Manage app |
 | `APP_SECRET_MISSING` | App '...' has no app secret yet. | Create the app secret |
-| `APP_EMBED_REFUSED` | The app has not allowed this platform to embed it (frame-ancestors). | Fix the header, remove `X-Frame-Options` |
+| `APP_EMBED_REFUSED` | The app has not allowed this platform to embed it (frame-ancestors). Reason `no_csp`, `not_allowed`, `xfo`, `unreachable` or `egress` | Fix the header, remove `X-Frame-Options`, or allow the origin in the network rules |
+| `APP_INTROSPECT_UNAUTHORIZED` (401) | Introspection is not authorised. | Send HTTP Basic with the app id and the current app secret |
+| `SSO_NOT_ENABLED` (409) | This app does not use sign-in by one-time code. | Set `sso.mode: "code"` |
 | `APP_SESSION_INVALID` | The app session is not valid. | Reopen the app |
 | `APP_PKCE_REQUIRED` | A PKCE challenge is required: a codeChallenge of 43 base64url characters. | Send an S256 challenge |
 | `APP_AUTHORIZE_RATE_LIMITED` | Too many sign-in codes were requested for this app session. | Renew only when introspection says inactive |
@@ -525,6 +535,8 @@ Runtime errors:
 | token `invalid_grant` (400) | The code is not valid (unknown, expired, already used, or not issued for this app and verifier). | Get a new code through `authorize` |
 | token `invalid_request` (400) | code and code_verifier are required; the verifier is 43 to 128 unreserved characters. | |
 | token `unsupported_grant_type` (400) | Only grant_type=authorization_code is supported. | |
+| token `429` | Too many failed attempts from this address. | Wait a minute, then retry with the correct app secret |
+| token `503` | The sign-in service is briefly unavailable. | Retry |
 
 ## Limits and editions
 

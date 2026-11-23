@@ -1,4 +1,4 @@
-import { createAction, createPiece, PieceAuth, Property } from '@activepieces/pieces-framework';
+import { createAction, createPiece, PieceAuth, Property } from '@aancer/connector-framework';
 
 // One action that returns its input. It needs no network access, so egressHosts stays empty.
 const echo = createAction({

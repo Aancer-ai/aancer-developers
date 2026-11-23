@@ -4,25 +4,62 @@
   "title": "AANCER pack manifest (bundle v2, authoring form)",
   "description": "The manifest.json of an AANCER extension pack (.ancpack). Each item's spec is checked against the schema of its kind. Rules this schema cannot express: every {{param.<id>}} must be declared in parameters, item ids must be unique, title is required (1 to 120 characters) when listing is present, listing.icon and listing.screenshots must be image assets of the pack, an external data flow host must also be listed under egress, and a connector pack holds exactly one connector item and nothing else.",
   "type": "object",
-  "required": ["v", "kind", "id", "version", "items"],
+  "required": [
+    "v",
+    "kind",
+    "id",
+    "version",
+    "items"
+  ],
   "properties": {
-    "v": { "const": 2, "description": "Manifest version. Always 2." },
-    "kind": { "const": "bundle" },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$", "description": "Permanent pack id. For a catalog submission use <publisherId>.<name>." },
-    "version": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?$", "description": "Strict semver. A pack id plus version is immutable: bump the version for any change." },
-    "title": { "type": "string", "maxLength": 120 },
+    "v": {
+      "const": 2,
+      "description": "Manifest version. Always 2."
+    },
+    "kind": {
+      "const": "bundle"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$",
+      "description": "Permanent pack id. For a catalog submission use <publisherId>.<name>."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?$",
+      "description": "Strict semver. A pack id plus version is immutable: bump the version for any change."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 120
+    },
     "publisher": {
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "keyId": { "type": "string", "description": "Id of the signing key. Must equal the trust key id the administrator adds. Use the pub-<12 hex> id that aancer-pack keygen prints." }
+        "name": {
+          "type": "string"
+        },
+        "keyId": {
+          "type": "string",
+          "description": "Id of the signing key: pub-<12 hex> (partner, printed by aancer-pack keygen), inst-<12 hex> (installation export key) or platform-<12 hex> (AANCER). Must equal the trust key id the administrator adds."
+        }
       }
     },
     "requires": {
       "type": "object",
       "properties": {
-        "platform": { "type": "string", "pattern": "^>=(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\s+<(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*))?$", "description": "Platform range, for example \">=1.0.0\" or \">=1.0.0 <2.0.0\"." },
-        "points": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Informational map of kind to schema version, for example {\"skill\": \"1\"}." }
+        "platform": {
+          "type": "string",
+          "pattern": "^>=(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(\\s+<(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*))?$",
+          "description": "Platform range, for example \">=1.0.0\" or \">=1.0.0 <2.0.0\"."
+        },
+        "points": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Informational map of kind to schema version, for example {\"skill\": \"1\"}."
+        }
       }
     },
     "parameters": {
@@ -30,13 +67,37 @@
       "description": "Values the administrator binds at activation. Reference them in a spec as the whole string {{param.<id>}}.",
       "items": {
         "type": "object",
-        "required": ["id", "type"],
+        "required": [
+          "id",
+          "type"
+        ],
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
-          "type": { "enum": ["connection", "workspace", "dataset", "string", "secret", "workflow", "agent"] },
-          "label": { "type": "string" },
-          "required": { "type": "boolean", "default": true },
-          "connector": { "type": "string", "description": "For a connection parameter: the connector the connection must belong to." },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "type": {
+            "enum": [
+              "connection",
+              "workspace",
+              "dataset",
+              "string",
+              "secret",
+              "workflow",
+              "agent"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean",
+            "default": true
+          },
+          "connector": {
+            "type": "string",
+            "description": "For a connection parameter: the connector the connection must belong to."
+          },
           "default": {}
         }
       }
@@ -46,11 +107,31 @@
       "description": "Binary files under content/. Written by aancer-pack sign; you do not need to author this list.",
       "items": {
         "type": "object",
-        "required": ["path", "sha256", "contentType"],
+        "required": [
+          "path",
+          "sha256",
+          "contentType"
+        ],
         "properties": {
-          "path": { "type": "string", "pattern": "^content/(?!.*\\.\\.).+$" },
-          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "contentType": { "enum": ["font/woff2", "image/png", "image/svg+xml", "image/jpeg", "image/x-icon", "application/x-tar"] }
+          "path": {
+            "type": "string",
+            "pattern": "^content/(?!.*\\.\\.).+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "contentType": {
+            "enum": [
+              "font/woff2",
+              "image/png",
+              "image/svg+xml",
+              "image/jpeg",
+              "image/x-icon",
+              "application/x-tar"
+            ],
+            "description": "application/x-tar only as the archive of a connector item."
+          }
         }
       }
     },
@@ -60,65 +141,233 @@
       "maxItems": 256,
       "items": {
         "type": "object",
-        "required": ["kind", "schemaVersion", "id", "spec"],
+        "required": [
+          "kind",
+          "schemaVersion",
+          "id",
+          "spec"
+        ],
         "properties": {
-          "kind": { "enum": ["theme", "locale", "dataset", "model", "widget", "dashboard", "hook", "function", "chip", "app", "link", "card", "skill", "connector", "template", "agent-blueprint"] },
-          "schemaVersion": { "type": "integer", "minimum": 1 },
-          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
-          "scope": { "enum": ["install", "workspace"], "default": "install" },
-          "workspace": { "type": "string", "minLength": 1, "description": "A workspace id or {{param.<id>}}. Only with scope workspace." },
+          "kind": {
+            "enum": [
+              "theme",
+              "locale",
+              "dataset",
+              "model",
+              "widget",
+              "dashboard",
+              "hook",
+              "function",
+              "chip",
+              "app",
+              "link",
+              "card",
+              "skill",
+              "connector",
+              "template",
+              "agent-blueprint"
+            ]
+          },
+          "schemaVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+          },
+          "scope": {
+            "enum": [
+              "install",
+              "workspace"
+            ],
+            "default": "install"
+          },
+          "workspace": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A workspace id or {{param.<id>}}. Only with scope workspace."
+          },
           "spec": {
             "type": "object",
             "description": "The item spec inline, or {\"$ref\": \"content/<file>.json\"}.",
             "properties": {
-              "$ref": { "type": "string", "pattern": "^content/(?!.*\\.\\.).+$" },
-              "$hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+              "$ref": {
+                "type": "string",
+                "pattern": "^content/(?!.*\\.\\.).+$"
+              },
+              "$hash": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              }
             }
           }
         },
         "allOf": [
           {
-            "if": { "properties": { "scope": { "const": "workspace" } }, "required": ["scope"] },
-            "then": { "required": ["workspace"] },
-            "else": { "not": { "required": ["workspace"] } }
+            "if": {
+              "properties": {
+                "scope": {
+                  "const": "workspace"
+                }
+              },
+              "required": [
+                "scope"
+              ]
+            },
+            "then": {
+              "required": [
+                "workspace"
+              ]
+            },
+            "else": {
+              "not": {
+                "required": [
+                  "workspace"
+                ]
+              }
+            }
           },
           {
-            "if": { "properties": { "kind": { "enum": ["agent-blueprint", "connector"] } }, "required": ["kind"] },
-            "then": { "properties": { "scope": { "const": "install" } } }
+            "if": {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "agent-blueprint",
+                    "connector"
+                  ]
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "scope": {
+                  "const": "install"
+                }
+              }
+            }
           }
         ]
       }
     },
-    "listing": { "$ref": "#/$defs/listing" },
-    "declarations": { "$ref": "#/$defs/declarations" },
-    "certification": { "type": "object", "description": "Added by AANCER certification; never author it." }
+    "listing": {
+      "$ref": "#/$defs/listing"
+    },
+    "declarations": {
+      "$ref": "#/$defs/declarations"
+    },
+    "certification": {
+      "type": "object",
+      "description": "Added by AANCER certification; never author it."
+    }
   },
   "$defs": {
     "listing": {
       "type": "object",
       "description": "Catalog listing. Optional for a private pack, required for a certified catalog submission.",
       "additionalProperties": false,
-      "required": ["v", "summary", "category"],
+      "required": [
+        "v",
+        "summary",
+        "category"
+      ],
       "properties": {
-        "v": { "const": 1 },
-        "summary": { "type": "string", "minLength": 1, "maxLength": 280 },
-        "description": { "type": "string", "maxLength": 4000, "description": "Plain text." },
-        "category": { "enum": ["operations", "finance", "hr", "legal", "sales", "marketing", "customer-service", "it", "devops", "security", "compliance", "procurement", "manufacturing", "healthcare", "retail", "education", "public-sector", "productivity", "analytics", "other"] },
-        "tags": { "type": "array", "maxItems": 8, "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,31}$" } },
-        "icon": { "type": "string", "description": "Path of an image listed in assets." },
-        "screenshots": { "type": "array", "maxItems": 5, "items": { "type": "string" } },
-        "releaseNotes": { "type": "string", "maxLength": 4000 },
-        "supportUrl": { "type": "string", "pattern": "^https://", "maxLength": 300 },
+        "v": {
+          "const": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Plain text."
+        },
+        "category": {
+          "enum": [
+            "operations",
+            "finance",
+            "hr",
+            "legal",
+            "sales",
+            "marketing",
+            "customer-service",
+            "it",
+            "devops",
+            "security",
+            "compliance",
+            "procurement",
+            "manufacturing",
+            "healthcare",
+            "retail",
+            "education",
+            "public-sector",
+            "productivity",
+            "analytics",
+            "other"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,31}$"
+          }
+        },
+        "icon": {
+          "type": "string",
+          "description": "Path of an image listed in assets."
+        },
+        "screenshots": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "string"
+          }
+        },
+        "releaseNotes": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "supportUrl": {
+          "type": "string",
+          "pattern": "^https://",
+          "maxLength": 300
+        },
         "locales": {
           "type": "object",
-          "propertyNames": { "enum": ["en", "de", "es", "ar"] },
+          "propertyNames": {
+            "enum": [
+              "en",
+              "de",
+              "es",
+              "ar"
+            ]
+          },
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "title": { "type": "string", "minLength": 1, "maxLength": 120 },
-              "summary": { "type": "string", "minLength": 1, "maxLength": 280 },
-              "description": { "type": "string", "maxLength": 4000 }
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "summary": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 4000
+              }
             }
           }
         }
@@ -128,20 +377,42 @@
       "type": "object",
       "description": "Licence, data flows, network egress and AI use. Required for a certified catalog submission and for an agent blueprint that uses web search.",
       "additionalProperties": false,
-      "required": ["v", "licence", "dataFlows", "egress", "aiUse", "attestations"],
+      "required": [
+        "v",
+        "licence",
+        "dataFlows",
+        "egress",
+        "aiUse",
+        "attestations"
+      ],
       "properties": {
-        "v": { "const": 1 },
-        "licence": { "type": "string", "pattern": "^(0BSD|AGPL-3\\.0-only|AGPL-3\\.0-or-later|Apache-2\\.0|BSD-2-Clause|BSD-3-Clause|BSL-1\\.0|CC-BY-4\\.0|CC-BY-SA-4\\.0|CC0-1\\.0|EPL-2\\.0|EUPL-1\\.2|GPL-2\\.0-only|GPL-2\\.0-or-later|GPL-3\\.0-only|GPL-3\\.0-or-later|ISC|LGPL-2\\.1-only|LGPL-2\\.1-or-later|LGPL-3\\.0-only|LGPL-3\\.0-or-later|MIT|MIT-0|MPL-2\\.0|OFL-1\\.1|Unlicense|Zlib|LicenseRef-[A-Za-z0-9.-]{1,64})$" },
+        "v": {
+          "const": 1
+        },
+        "licence": {
+          "type": "string",
+          "pattern": "^(0BSD|AGPL-3\\.0-only|AGPL-3\\.0-or-later|Apache-2\\.0|BSD-2-Clause|BSD-3-Clause|BSL-1\\.0|CC-BY-4\\.0|CC-BY-SA-4\\.0|CC0-1\\.0|EPL-2\\.0|EUPL-1\\.2|GPL-2\\.0-only|GPL-2\\.0-or-later|GPL-3\\.0-only|GPL-3\\.0-or-later|ISC|LGPL-2\\.1-only|LGPL-2\\.1-or-later|LGPL-3\\.0-only|LGPL-3\\.0-or-later|MIT|MIT-0|MPL-2\\.0|OFL-1\\.1|Unlicense|Zlib|LicenseRef-[A-Za-z0-9.-]{1,64})$"
+        },
         "thirdParty": {
           "type": "array",
           "maxItems": 256,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "licence"],
+            "required": [
+              "name",
+              "licence"
+            ],
             "properties": {
-              "name": { "type": "string", "minLength": 1, "maxLength": 120 },
-              "licence": { "type": "string" }
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "licence": {
+                "type": "string",
+                "pattern": "^(0BSD|AGPL-3\\.0-only|AGPL-3\\.0-or-later|Apache-2\\.0|BSD-2-Clause|BSD-3-Clause|BSL-1\\.0|CC-BY-4\\.0|CC-BY-SA-4\\.0|CC0-1\\.0|EPL-2\\.0|EUPL-1\\.2|GPL-2\\.0-only|GPL-2\\.0-or-later|GPL-3\\.0-only|GPL-3\\.0-or-later|ISC|LGPL-2\\.1-only|LGPL-2\\.1-or-later|LGPL-3\\.0-only|LGPL-3\\.0-or-later|MIT|MIT-0|MPL-2\\.0|OFL-1\\.1|Unlicense|Zlib|LicenseRef-[A-Za-z0-9.-]{1,64})$"
+              }
             }
           }
         },
@@ -151,11 +422,26 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["host", "port", "purpose"],
+            "required": [
+              "host",
+              "port",
+              "purpose"
+            ],
             "properties": {
-              "host": { "type": "string", "pattern": "^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$" },
-              "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-              "purpose": { "type": "string", "minLength": 1, "maxLength": 280 }
+              "host": {
+                "type": "string",
+                "pattern": "^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "purpose": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              }
             }
           }
         },
@@ -165,33 +451,82 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["purpose", "data", "personalData", "destination"],
+            "required": [
+              "purpose",
+              "data",
+              "personalData",
+              "destination"
+            ],
             "properties": {
-              "purpose": { "type": "string", "minLength": 1, "maxLength": 280 },
-              "data": { "type": "array", "maxItems": 16, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
-              "personalData": { "type": "boolean" },
-              "destination": { "enum": ["installation", "external", "web-search"] },
-              "host": { "type": "string", "description": "Required when destination is external. Must also appear under egress." }
+              "purpose": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "data": {
+                "type": "array",
+                "maxItems": 16,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "personalData": {
+                "type": "boolean"
+              },
+              "destination": {
+                "enum": [
+                  "installation",
+                  "external",
+                  "web-search"
+                ]
+              },
+              "host": {
+                "type": "string",
+                "description": "Required when destination is external. Must also appear under egress."
+              }
             }
           }
         },
         "aiUse": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["intendedPurpose", "annexIII", "humanOversight"],
+          "required": [
+            "intendedPurpose",
+            "annexIII",
+            "humanOversight"
+          ],
           "properties": {
-            "intendedPurpose": { "type": "string", "minLength": 1, "maxLength": 500 },
-            "annexIII": { "type": "boolean" },
-            "humanOversight": { "type": "string", "minLength": 1, "maxLength": 120 }
+            "intendedPurpose": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "annexIII": {
+              "type": "boolean"
+            },
+            "humanOversight": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
           }
         },
         "attestations": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["ownsRights", "noProhibitedPractice"],
+          "required": [
+            "ownsRights",
+            "noProhibitedPractice"
+          ],
           "properties": {
-            "ownsRights": { "const": true },
-            "noProhibitedPractice": { "const": true }
+            "ownsRights": {
+              "const": true
+            },
+            "noProhibitedPractice": {
+              "const": true
+            }
           }
         }
       }

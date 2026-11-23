@@ -1,6 +1,6 @@
 ---
 title: Dashboards, datasets and models | AANCER Developers
-description: Build AANCER dashboards as data: datasets, semantic models, widgets with Vega-Lite charts, KPIs, tables and forms, and dashboard layouts.
+description: Build AANCER dashboards as data: datasets, semantic models, widgets with declarative charts, KPIs, tables and forms, and dashboard layouts.
 ---
 
 ## Dashboards
@@ -12,7 +12,7 @@ An AANCER dashboard is data, not code. It is built from four object kinds that s
 3. a **widget**: a table, a chart, a KPI, Markdown text or a form, bound to a model query;
 4. a **dashboard**: a 12-column grid of widgets plus global filters.
 
-Charts are Vega-Lite fragments without data: the platform runs the query and injects the result. Dashboards are versioned. You save a draft, then publish version N, with rollback and retire. You can build them in the UI under **Work > Dashboards**, through the REST API, or ship them in a signed pack with items of kind `dataset`, `model`, `widget` and `dashboard`. Every published dashboard also gets a 2D and 3D view switch, which needs no authoring.
+Charts are declarative chart specifications (JSON) without data: the platform runs the query and injects the result. Dashboards are versioned. You save a draft, then publish version N, with rollback and retire. You can build them in the UI under **Work > Dashboards**, through the REST API, or ship them in a signed pack with items of kind `dataset`, `model`, `widget` and `dashboard`. Every published dashboard also gets a 2D and 3D view switch, which needs no authoring.
 
 ## Quick start
 
@@ -64,7 +64,7 @@ Each item uses `"schemaVersion": 1` and `"scope": "workspace"` with `"workspace"
 
 ## Field reference
 
-JSON Schema: [dashboard.schema.json](https://aancer.ai/dev/schemas/dashboard.schema.json). It has one definition per kind: `dataset`, `model`, `widget`, `dashboard`. Ids everywhere match `^[a-z0-9][a-z0-9._-]{0,63}$`.
+JSON Schema: [dashboard.schema.json](https://aancer.ai/dev/schemas/dashboard.schema.json). It has one definition per kind: `dataset`, `model`, `widget`, `dashboard`. Ids match `^[a-z0-9][a-z0-9._-]{0,63}$`; dataset column ids match `^[a-z][a-z0-9_]{0,63}$`.
 
 ### Dataset
 
@@ -72,10 +72,10 @@ JSON Schema: [dashboard.schema.json](https://aancer.ai/dev/schemas/dashboard.sch
 |---|---|---|---|
 | `id` | string | yes | id pattern |
 | `title` | string | no | at most 120 characters |
-| `columns` | array | yes | 1 to 200 of `{ id, type, label?, required?, min?, max?, maxLength? }`. `type`: `string`, `number`, `integer`, `boolean`, `date`, `datetime`, `json` |
+| `columns` | array | yes | 1 to 200 of `{ id, type, label?, required?, min?, max?, maxLength? }`. Column `id` matches `^[a-z][a-z0-9_]{0,63}$`, unique. `type`: `string`, `number`, `integer`, `boolean`, `date`, `datetime`, `json` |
 | `key` | string[] | no | up to 8 columns used for upserts |
-| `retention` | object | yes | `{ maxAgeDays?, maxRows? }`, integers of 1 or more |
-| `personalData` | object | no | `{ classes: string[], subjectColumn?: string or null }` |
+| `retention` | object | yes | at least one of `maxAgeDays` (1 to 3650) and `maxRows` (1 to 5,000,000) |
+| `personalData` | object | no | `{ classes: string[], subjectColumn?: string or null }`. With classes, `subjectColumn` names a declared column and `seedRows` are not used |
 | `source` | string | no | `workflow`, `agent`, `chat`, `import`, `pack`, `manual` |
 | `seedRows` | object[] | no | up to 5000 initial rows |
 
@@ -87,7 +87,7 @@ Workflows fill datasets with a Publish step, agents with the dataset tool, and e
 |---|---|---|---|
 | `id` | string | yes | id pattern |
 | `title` | string | no | at most 120 characters |
-| `entities` | object | yes | 1 to 20. Each has exactly one of `dataset` (a dataset id) or `connection` (a connection id or `{{param.x}}`). A connection entity needs `query`: one saved SQL statement of at most 4000 characters with `:param` binds, and `params {name: {type: string, number or date, default?}}` |
+| `entities` | object | yes | 1 to 3. Each has exactly one of `dataset` (a dataset id) or `connection` (a connection id or `{{param.x}}`). A connection entity needs `query`: one saved SQL statement (no `;`, `--` or `/*`) of at most 4000 characters with `:param` binds, and `params {name: {type: string, number or date, default?}}` |
 | `dimensions` | object | yes | up to 100 of `{ entity, column, label?, granularity? }`. `granularity`: list of `day`, `week`, `month`, `quarter`, `year` |
 | `measures` | object | yes | 1 to 100 of `{ entity, agg, column?, label?, format? }`. `agg`: `count`, `sum`, `avg`, `min`, `max`, `distinct`. `format`: `number`, `integer`, `percent`, `currency` |
 | `filters` | object | no | up to 100 of `{ dimension, op, value?, param?, label? }`. `op`: `eq`, `neq`, `in`, `gt`, `gte`, `lt`, `lte`, `between`, `in_period`, `contains`. Example: `{"dimension": "date", "op": "in_period", "value": "current_month"}` |
@@ -105,7 +105,7 @@ Every dataset also gets an automatic model `m-<datasetId>` with every column as 
 | `title` | string | yes | at most 120 characters |
 | `source` | object | for table, chart, kpi | `{ model, query }`. See Model query |
 | `table` | object | no | `{ columns?: [{ field, label?, width?, format? }] (up to 50), pageSize?: 1 to 200 }` |
-| `chart` | object | for chart | a Vega-Lite v5 fragment. See Chart rules |
+| `chart` | object | for chart | a declarative chart specification (JSON). See Chart rules |
 | `kpi` | object | for kpi | `{ measure, compare?: { filter, label? }, format?, label? }` |
 | `markdown` | object | for markdown | `{ text }`, at most 20,000 characters, no scripts |
 | `form` | object | for form | `{ card, target, onSuccess?: { message? }, personalData?: { classes } }`. See Form widgets |
@@ -121,7 +121,7 @@ Every dataset also gets an automatic model `m-<datasetId>` with every column as 
 | `filters` | named model filters |
 | `variables` | values for model variables |
 | `order` | `[{ field, dir: "asc" or "desc" }]` |
-| `limit` | at most 5000 rows |
+| `limit` | 1 to 5000 rows, default 500 |
 | `granularity` | `{ "<time dimension>": "day" ... "year" }` |
 
 Up to 8 measures and 3 joins per query.
@@ -385,7 +385,7 @@ In the UI: **Work > Dashboards**, then Add widget, **Help me build**, Save draft
 
 ## Limits and editions
 
-- Datasets: up to 200 columns. Models: 20 entities, 100 dimensions, 100 measures, 3 joins. Queries: 5000 rows, 4 dimensions, 8 measures.
+- Datasets: up to 200 columns. Models: 3 entities, 100 dimensions, 100 measures, 3 joins. Queries: 5000 rows, 4 dimensions, 8 measures.
 - Dashboards: up to 40 widgets and 12 filters. Widgets: up to 5 actions. Forms: up to 40 inputs.
 - Widget actions are limited to 30 runs per minute per user and workspace.
 - Public share links need the public sharing licence feature.

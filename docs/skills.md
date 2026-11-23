@@ -104,6 +104,7 @@ JSON Schema: [skill.schema.json](https://aancer.ai/dev/schemas/skill.schema.json
 | `instructions` | string | yes | 1 to 20,000 characters, Markdown |
 | `connectors` | string[] | no | at most 20 connector names, each `^[a-z0-9@][a-z0-9@/._-]{0,99}$` |
 | `triggers` | string[] | no | at most 10 phrases, each 1 to 80 characters |
+| `workspace` | string | no | a workspace id or `{{param.<id>}}` |
 
 No other fields are allowed.
 

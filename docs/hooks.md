@@ -54,14 +54,16 @@ JSON Schema: [hook.schema.json](https://aancer.ai/dev/schemas/hook.schema.json)
 | Field | Type | Required | Rules |
 |---|---|---|---|
 | `id` | string | yes | `^[a-z0-9][a-z0-9._-]{0,63}$`, unique per workspace |
+| `workspace` | string | no | a workspace id or `{{param.<id>}}` |
 | `title` | string | no | at most 120 characters. Default: the id |
 | `event.name` | string | yes | one of the ten event names below |
 | `event.version` | integer | no | `1` |
 | `filter` | array | no | up to 8 clauses `{ path, op, value? }`. All must match. For "or", write two hooks |
 | `handler.type` | string | yes | `workflow` or `agent` |
 | `handler.ref` | string | yes | a workflow id, or an agent reference such as `agent:digest` |
+| `delivery.atLeastOnce` | boolean | no | |
 | `delivery.maxConcurrency` | integer | no | 1 to 20, default 1 |
-| `delivery.retry.max` | integer | no | 0 to 10. The installation may cap it lower (default 3) |
+| `delivery.retry.max` | integer | no | 0 to 10, applied up to the installation's setting (default 3) |
 | `delivery.retry.backoffSeconds` | integer[] | no | up to 10 values, each 1 to 86400. Default `[30, 120, 480]`. The last value repeats |
 | `enabled` | boolean | no | default `true` |
 
@@ -148,7 +150,7 @@ A delivery counts as delivered when the run starts. If the run fails later, the 
 }
 ```
 
-### Failed runs of one workflow, with more retries
+### Failed runs of one workflow, with its own retry schedule
 
 ```json
 {
@@ -159,7 +161,7 @@ A delivery counts as delivered when the run starts. If the run fails later, the 
     { "path": "payload.status", "op": "neq", "value": "TIMEOUT" }
   ],
   "handler": { "type": "workflow", "ref": "flow_open_ticket" },
-  "delivery": { "retry": { "max": 5, "backoffSeconds": [60, 300, 900] } }
+  "delivery": { "retry": { "max": 3, "backoffSeconds": [60, 300, 900] } }
 }
 ```
 
@@ -167,7 +169,7 @@ A delivery counts as delivered when the run starts. If the run fails later, the 
 
 ### Test the filter first
 
-`POST /api/event-hooks/test` checks a hook against a sample event. It never starts the handler.
+`POST /api/event-hooks/test` checks a hook against a sample event. It never starts the handler. It needs `hooks.manage_own`.
 
 ```http
 POST /api/event-hooks/test
@@ -209,25 +211,28 @@ If the handler workflow is not yet published with an Event trigger, the hook is 
 
 ## Common errors
 
-| Code | Message | Fix |
-|---|---|---|
-| `VALIDATION` | definition is required | Wrap the hook in `{"definition": ...}` |
-| `HOOK_FILTER_INVALID` | /id: must match ^[a-z0-9][a-z0-9._-]{0,63}$ | Lower-case id |
-| `HOOK_FILTER_INVALID` | /id: a hook with this id already exists | Choose another id, or use PUT |
-| `HOOK_EVENT_UNKNOWN` | /event/name: unknown event '...' | Use a catalog name |
-| `HOOK_FILTER_INVALID` | /filter: at most 8 clauses (OR = two hooks) | Split into two hooks |
-| `HOOK_FILTER_INVALID` | /filter/0/path: path must start with payload., resource. or be actor.role | |
-| `HOOK_FILTER_INVALID` | /filter/0/value: in needs an array value / value is required | |
-| `HOOK_LIMIT_EXCEEDED` | At most 100 hooks per workspace. | Retire unused hooks |
-| `HOOK_HANDLER_NOT_FOUND` | Workflow '...' does not exist. / Agent '...' does not exist. | Create it first |
-| `HOOK_HANDLER_FORBIDDEN` | Workflow '...' belongs to another workspace. | |
-| warning `HANDLER_INACTIVE` | the workflow is not published with an Event trigger; deliveries will fail until it is. | Publish it with the AANCER Event trigger, then enable |
-| `HOOK_MANAGED_BY_PACK` | This hook is managed by pack '...'; edit the pack. | Ship a new pack version |
-| `DELIVERY_NOT_RETRYABLE` | A '...' delivery cannot be retried. | Only failed or dead-lettered deliveries |
-| `HOOK_DISABLED` | A disabled hook cannot replay; enable it first. | |
-| `HOOK_REPLAY_TOO_LARGE` | The replay window is limited to 30 days. / More than 1000 events match; narrow the window. | |
-| delivery `lastError` | HANDLER_INACTIVE: Workflow '...' listens to '...', not '...'. | Make the trigger event and the hook event match |
-| `PACK_SCHEMA_INVALID` | /items/.../spec: must NOT have additional properties | For example `dataClassification` in a pack spec. Remove it |
+| Code | Status | Message | Fix |
+|---|---|---|---|
+| `VALIDATION` | 400 | definition is required | Wrap the hook in `{"definition": ...}` |
+| `HOOK_FILTER_INVALID` | 400 | /id: must match ^[a-z0-9][a-z0-9._-]{0,63}$ | Lower-case id |
+| `HOOK_FILTER_INVALID` | 400 | /id: a hook with this id already exists | Choose another id, or use PUT |
+| `HOOK_EVENT_UNKNOWN` | 400 | /event/name: unknown event '...' | Use a catalog name |
+| `HOOK_FILTER_INVALID` | 400 | /filter: at most 8 clauses (OR = two hooks) | Split into two hooks |
+| `HOOK_FILTER_INVALID` | 400 | /filter/0/path: path must start with payload., resource. or be actor.role | |
+| `HOOK_FILTER_INVALID` | 400 | /filter/0/value: in needs an array value / value is required | |
+| `HOOK_LIMIT_EXCEEDED` | 422 | At most 100 hooks per workspace. | Retire unused hooks |
+| `HOOK_HANDLER_NOT_FOUND` | 422 | Workflow '...' does not exist. / Agent '...' does not exist. | Create it first |
+| `HOOK_HANDLER_FORBIDDEN` | 422 | Workflow '...' belongs to another workspace. | Use a handler in the hook's workspace |
+| `HOOK_HANDLER_INACTIVE` | 422 | the workflow is not published with an Event trigger | Publish it with the AANCER Event trigger, then enable |
+| `HOOK_INVALID` | 400 | /dataClassification: sovereign, internal or permitted | Use one of the three values |
+| warning `HANDLER_INACTIVE` |  | the workflow is not published with an Event trigger; deliveries will fail until it is. | Publish it with the AANCER Event trigger, then enable |
+| `HOOK_MANAGED_BY_PACK` | 409 | This hook is managed by pack '...'; edit the pack. | Ship a new pack version |
+| `DELIVERY_NOT_RETRYABLE` |  | A '...' delivery cannot be retried. | Only failed or dead-lettered deliveries |
+| `HOOK_DISABLED` | 409 | A disabled hook cannot replay; enable it first. | |
+| `HOOK_REPLAY_WINDOW_INVALID` | 400 | The replay window is limited to 30 days. | Choose `from` and `to` within 30 days |
+| `HOOK_REPLAY_TOO_LARGE` | 400 | More than 1000 events match; narrow the window. | Narrow the window |
+| delivery `lastError` |  | HANDLER_INACTIVE: Workflow '...' listens to '...', not '...'. | Make the trigger event and the hook event match |
+| `PACK_SCHEMA_INVALID` | 422 | /items/.../spec: must NOT have additional properties | For example `dataClassification` in a pack spec. Remove it |
 
 ## Limits and editions
 

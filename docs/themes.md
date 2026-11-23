@@ -86,7 +86,7 @@ JSON Schema: [theme.schema.json](https://aancer.ai/dev/schemas/theme.schema.json
 | `fonts[].style` | string | no | `normal` or `italic` |
 | `fonts[].display` | string | no | `swap` (default), `block`, `fallback`, `optional`, `auto` |
 | `fonts[].unicodeRange` | string | no | at most 200 characters |
-| `typography` | object | no | CSS font stacks: `ui`, `mono`, `display`, each at most 200 characters |
+| `typography` | object | no | CSS font stacks: `ui`, `mono`, `display`, `label`, each at most 200 characters |
 | `logos` | object | no | `light`, `dark`, `monochrome`, `favicon`, `emailHeader`. Each a path under `content/logos/` |
 | `themes` | object | yes | keys are theme block ids; `light` is required. Each block maps token to value |
 | `login` | object | no | `backgroundColor`, `backgroundImage` (path under `content/logos/`), `tagline` (120), `legalFooter` (500). Install scope only |
@@ -94,7 +94,7 @@ JSON Schema: [theme.schema.json](https://aancer.ai/dev/schemas/theme.schema.json
 
 Every family in `typography` must be declared in `fonts` or be a generic family such as `system-ui`, `sans-serif`, `serif`, `monospace`, `ui-monospace`, `ui-sans-serif`, `-apple-system`, `'segoe ui'`, `roboto`, `'helvetica neue'`, `arial`, `menlo` or `consolas`.
 
-Colour values: `#rgb`, `#rrggbb`, `rgb(r,g,b)` or `rgba(r,g,b,a)`. No `var()`, `hsl()` or colour names. `--shadow-card` takes free CSS of at most 200 characters.
+Colour values: `#rgb`, `#rrggbb`, `rgb(r,g,b)` or `rgba(r,g,b,a)` with `a` written as `0`, `1` or a decimal such as `0.3` or `.3`. No `var()`, `hsl()` or colour names. `--shadow-card` takes free CSS of at most 200 characters.
 
 The theme document must not contain `http:`, `https:`, `//`, `data:` or `url(` anywhere. This includes text fields such as the tagline and the legal footer. Ship files in `content/` instead.
 
@@ -154,11 +154,11 @@ A `locale` item renames UI strings: `{ "locale": "de", "keys": { "<UI key>": "<t
 | `locale` | `en`, `de`, `es` or `ar` |
 | `keys` | 1 to 2000 entries. Each key must be an existing UI string key. Each value at most 500 characters |
 
-Values cannot contain `<` or `>`. Placeholders such as `{{count}}` must match the original string. One overlay per locale per scope.
+Values cannot contain `<` or `>` or the names of third-party products. Keys starting with `_meta` are not overridable. Placeholders such as `{{count}}` must match the original string. A locale overlay applies to the whole installation: use install scope, one overlay per locale.
 
 ## Full examples
 
-### Theme with a font and logos, scoped to one workspace, with a locale overlay
+### Theme with a font and logos, scoped to one workspace, plus a locale overlay for the installation
 
 `manifest.json`:
 
@@ -171,7 +171,7 @@ Values cannot contain `<` or `>`. Placeholders such as `{{count}}` must match th
   "items": [
     { "kind": "theme", "schemaVersion": 2, "id": "acme-ws-ci", "scope": "workspace", "workspace": "{{param.target_workspace}}",
       "spec": { "$ref": "content/theme.json" } },
-    { "kind": "locale", "schemaVersion": 1, "id": "de-words", "scope": "workspace", "workspace": "{{param.target_workspace}}",
+    { "kind": "locale", "schemaVersion": 1, "id": "de-words", "scope": "install",
       "spec": { "locale": "de", "keys": { "nav.knowledge": "Wissen" } } }
   ]
 }
@@ -248,7 +248,7 @@ Under **Platform Settings > Look & feel**, an administrator can switch between s
 
 While an install-scoped theme pack is active, manual branding is read-only.
 
-Test in an EVAL or test workspace first: import shows every contrast warning before anything changes.
+Test in an EVAL or test installation first: import shows every contrast warning before anything changes.
 
 ## Common errors
 
@@ -270,7 +270,9 @@ Test in an EVAL or test workspace first: import shows every contrast warning bef
 | `THEME_ALREADY_ACTIVE`: Theme pack '...' is already active; retire it first | Retire the other theme, or switch under Look & feel |
 | locale: key is not in the shipped bundle (`LOCALE_KEY_UNKNOWN`) | Use an existing UI key |
 | locale: markup is not allowed / interpolation slots must match the shipped text | No `<` or `>`; keep the same `{{slots}}` |
-| `LOCALE_ALREADY_ACTIVE` | One overlay per locale per scope |
+| `LOCALE_ALREADY_ACTIVE` | One overlay per locale for the installation |
+| locale: vendor names are not allowed in UI copy (`LOCALE_VENDOR_STRING`) | Remove the product name from the text |
+| locale: `_meta` keys are not overridable | Remove the key |
 
 ## Limits and editions
 

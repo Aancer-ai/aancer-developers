@@ -5,16 +5,71 @@
   "description": "The spec of a connector item. A connector pack holds exactly one connector item, install scope, with the built connector code in content/piece.tar. Connector packs are signed by AANCER through certification: partners submit the connector source, AANCER builds, reviews and signs it.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["pieceName", "pieceVersion", "displayName", "category", "archive", "framework", "egressHosts", "deps"],
+  "required": [
+    "pieceName",
+    "pieceVersion",
+    "displayName",
+    "category",
+    "archive",
+    "framework",
+    "egressHosts",
+    "deps"
+  ],
   "properties": {
-    "licenceId": { "type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", "description": "Present for a paid connector bound to one customer licence. Absent for a free connector." },
-    "pieceName": { "type": "string", "pattern": "^@(aancer|activepieces)/piece-[a-z0-9][a-z0-9-]{1,62}$", "description": "Package name. Partners use @aancer/piece-<name>. The part after piece- must be unique on the installation." },
-    "pieceVersion": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$" },
-    "displayName": { "type": "string", "minLength": 1, "maxLength": 80 },
-    "description": { "type": "string", "maxLength": 300 },
-    "category": { "enum": ["AI", "Comms", "Commerce", "Core", "Business", "Finance", "Productivity", "Content", "Developer", "Support", "Forms", "HR", "Payments", "Marketing", "Sales", "Other"] },
-    "archive": { "type": "string", "minLength": 1, "maxLength": 255, "description": "Path of the application/x-tar asset that holds the built connector. Always content/piece.tar." },
-    "framework": { "type": "string", "pattern": "^\\d+\\.\\d+$", "description": "major.minor of the pieces framework the connector was built against." },
+    "licenceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "Present for a paid connector bound to one customer licence. Absent for a free connector."
+    },
+    "pieceName": {
+      "type": "string",
+      "pattern": "^@aancer/piece-[a-z0-9][a-z0-9-]{1,62}$",
+      "description": "Package name @aancer/piece-<name>. The part after piece- must be unique on the installation."
+    },
+    "pieceVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "category": {
+      "enum": [
+        "AI",
+        "Comms",
+        "Commerce",
+        "Core",
+        "Business",
+        "Finance",
+        "Productivity",
+        "Content",
+        "Developer",
+        "Support",
+        "Forms",
+        "HR",
+        "Payments",
+        "Marketing",
+        "Sales",
+        "Other"
+      ]
+    },
+    "archive": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Path of the application/x-tar asset that holds the built connector. Always content/piece.tar."
+    },
+    "framework": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "major.minor of the connector framework, written by certification."
+    },
     "egressHosts": {
       "type": "array",
       "maxItems": 64,
@@ -23,7 +78,9 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 260,
-        "not": { "pattern": "^\\s*\\*\\s*$" },
+        "not": {
+          "pattern": "^\\s*\\*\\s*$"
+        },
         "pattern": "^\\s*(\\*\\.)?[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*(?::\\d{1,5})?\\s*$"
       }
     },
@@ -31,11 +88,27 @@
       "type": "object",
       "additionalProperties": false,
       "description": "Take the allowed host and port from the connection the administrator creates, for systems that run at the customer.",
-      "required": ["hostProp", "portProp", "defaultPort"],
+      "required": [
+        "hostProp",
+        "portProp",
+        "defaultPort"
+      ],
       "properties": {
-        "hostProp": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "portProp": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "defaultPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+        "hostProp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "portProp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "defaultPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
       }
     },
     "deps": {
@@ -45,14 +118,95 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "version", "license"],
+        "required": [
+          "name",
+          "version",
+          "license"
+        ],
         "properties": {
-          "name": { "type": "string", "minLength": 1, "maxLength": 214 },
-          "version": { "type": "string", "minLength": 1, "maxLength": 64 },
-          "license": { "type": "string", "maxLength": 128 }
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 214
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "license": {
+            "type": "string",
+            "maxLength": 128
+          }
         }
       }
     },
-    "build": { "type": "object", "description": "Build facts written by the AANCER build." }
+    "build": {
+      "type": "object",
+      "description": "Build facts written by the AANCER build."
+    },
+    "knowledgeSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "For a connector that feeds knowledge sets.",
+      "required": [
+        "contract",
+        "label",
+        "actions"
+      ],
+      "properties": {
+        "contract": {
+          "const": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "actions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "list",
+            "item",
+            "download"
+          ],
+          "properties": {
+            "list": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "item": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "download": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            },
+            "estimate": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{0,63}$"
+            }
+          }
+        },
+        "siteProps": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "sharedConnectionView": {
+          "type": "boolean"
+        }
+      }
+    },
+    "metadata": {
+      "type": "boolean",
+      "description": "true when the archive root holds aancer-metadata.json."
+    }
   }
 }

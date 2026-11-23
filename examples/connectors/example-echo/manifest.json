@@ -5,7 +5,8 @@
   "version": "0.1.0",
   "title": "Example echo connector",
   "publisher": {
-    "name": "Acme Example Ltd"
+    "name": "Evntx FZCO",
+    "keyId": "platform-000000000000"
   },
   "parameters": [],
   "items": [
@@ -17,6 +18,13 @@
       "spec": {
         "$ref": "content/connector.json"
       }
+    }
+  ],
+  "assets": [
+    {
+      "path": "content/piece.tar",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "contentType": "application/x-tar"
     }
   ]
 }

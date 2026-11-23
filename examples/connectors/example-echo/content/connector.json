@@ -5,7 +5,7 @@
   "description": "Echoes its input back. Useful to test connector install.",
   "category": "Developer",
   "archive": "content/piece.tar",
-  "framework": "0.33",
+  "framework": "1.0",
   "egressHosts": [],
   "deps": []
 }

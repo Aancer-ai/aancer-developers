@@ -5,17 +5,49 @@
   "description": "The spec of a hook item: when a platform event happens in a workspace and every filter clause matches, start a workflow or an agent. Hooks are workspace items. A workflow handler must be published with the AANCER Event trigger. For OR logic, write two hooks.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "event", "handler"],
+  "required": [
+    "id",
+    "event",
+    "handler"
+  ],
   "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
-    "title": { "type": "string", "maxLength": 120 },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A workspace id or {{param.<id>}}."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 120
+    },
     "event": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
-        "name": { "enum": ["run.completed", "run.failed", "approval.decided", "approval.requested", "dataset.rows.published", "dashboard.published", "document.ingested", "user.provisioned", "workspace.member.changed", "schedule.run.completed"] },
-        "version": { "const": 1 }
+        "name": {
+          "enum": [
+            "run.completed",
+            "run.failed",
+            "approval.decided",
+            "approval.requested",
+            "dataset.rows.published",
+            "dashboard.published",
+            "document.ingested",
+            "user.provisioned",
+            "workspace.member.changed",
+            "schedule.run.completed"
+          ]
+        },
+        "version": {
+          "const": 1
+        }
       }
     },
     "filter": {
@@ -25,42 +57,131 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["path", "op"],
+        "required": [
+          "path",
+          "op"
+        ],
         "properties": {
-          "path": { "type": "string", "pattern": "^(actor\\.role|(payload|resource)\\.[^.]+(\\.[^.]+)*)$" },
-          "op": { "enum": ["eq", "neq", "in", "gt", "gte", "lt", "lte", "contains", "exists"] },
+          "path": {
+            "type": "string",
+            "pattern": "^(actor\\.role|(payload|resource)\\.[^.]+(\\.[^.]+)*)$"
+          },
+          "op": {
+            "enum": [
+              "eq",
+              "neq",
+              "in",
+              "gt",
+              "gte",
+              "lt",
+              "lte",
+              "contains",
+              "exists"
+            ]
+          },
           "value": {}
         },
         "allOf": [
-          { "if": { "properties": { "op": { "const": "in" } } }, "then": { "required": ["value"], "properties": { "value": { "type": "array" } } } },
-          { "if": { "properties": { "op": { "not": { "enum": ["in", "exists"] } } } }, "then": { "required": ["value"] } }
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "in"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "type": "array"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "not": {
+                    "enum": [
+                      "in",
+                      "exists"
+                    ]
+                  }
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "value"
+              ]
+            }
+          }
         ]
       }
     },
     "handler": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "ref"],
+      "required": [
+        "type",
+        "ref"
+      ],
       "properties": {
-        "type": { "enum": ["workflow", "agent"] },
-        "ref": { "type": "string", "minLength": 1, "description": "A workflow id, or an agent ref such as agent:digest." }
+        "type": {
+          "enum": [
+            "workflow",
+            "agent"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A workflow id, or an agent ref such as agent:digest."
+        }
       }
     },
     "delivery": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "maxConcurrency": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 },
+        "atLeastOnce": {
+          "type": "boolean"
+        },
+        "maxConcurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 1
+        },
         "retry": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "max": { "type": "integer", "minimum": 0, "maximum": 10 },
-            "backoffSeconds": { "type": "array", "maxItems": 10, "items": { "type": "integer", "minimum": 1, "maximum": 86400 } }
+            "max": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "backoffSeconds": {
+              "type": "array",
+              "maxItems": 10,
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 86400
+              }
+            }
           }
         }
       }
     },
-    "enabled": { "type": "boolean", "default": true }
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    }
   }
 }

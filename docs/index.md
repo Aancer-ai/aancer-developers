@@ -68,7 +68,7 @@ Rules:
 - Never put keys, tokens or passwords into any file.
 - Check every limit in the field tables (lengths, counts, allowed values).
 - After the files, list the commands to sign the pack with the aancer-pack CLI and the steps to
-  import and activate it in a test workspace.
+  import and activate it in a test installation.
 
 What I want to build:
 <describe it here, for example: "A workflow template that takes a support e-mail, classifies it
@@ -123,15 +123,15 @@ The [AANCER developers repository on GitHub](https://github.com/Aancer-ai/aancer
 
 ## Tools
 
-- **aancer-pack CLI**: creates keys, signs, verifies, inspects and lints packs. Node 20 or newer. Available as a download for partners and builders.
+- **aancer-pack CLI**: creates keys, signs, verifies, inspects and lints packs. Node 20 or newer. Available to partners and builders on request: [contact us](https://aancer.ai/contact).
 - **AANCER Builder MCP server** at `https://aancer.ai/mcp`: `validate_pack` checks a pack against the schemas before you sign it. See [Connect the AANCER Builder MCP server](#connect-the-aancer-builder-mcp-server).
-- **A test installation**: the installation has no validate-only API yet. Import your pack into an EVAL or test workspace. Import checks everything and installs nothing until you activate. [Start a free EVAL](https://aancer.ai/contact?intent=eval).
+- **A test installation**: import your pack into an EVAL or test installation. Import checks everything and installs nothing until you activate. [Start a free EVAL](https://aancer.ai/contact?intent=eval).
 
 ## Start here
 
 1. Read [Packs](/developers/packs).
 2. Pick your type from the table above and copy its Quick start.
-3. Sign with `aancer-pack`, import into a test workspace, read the summary, activate.
+3. Sign with `aancer-pack`, import into a test installation, read the summary, activate.
 4. Partners who want to publish in the certified catalog add `listing` and `declarations` and run `aancer-pack lint`. See the [partner programme](https://aancer.ai/partners).
 
 ## Limits and editions

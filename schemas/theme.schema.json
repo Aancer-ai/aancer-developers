@@ -5,26 +5,84 @@
   "description": "The spec of a theme item, schema version 2: design tokens, platform name, fonts, logos, login page and e-mail colours shipped as data. The document must not contain http:, https:, //, data: or url( anywhere, including text fields. Fonts and logos are files inside the pack. The themeV1 definition is the older six-field branding document (schemaVersion 1); the locale definition is the companion locale item (kind locale, schemaVersion 1).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "platformName", "themes"],
+  "required": [
+    "id",
+    "platformName",
+    "themes"
+  ],
   "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$", "description": "Use the same value as the item id." },
-    "platformName": { "type": "string", "minLength": 1, "maxLength": 64 },
-    "tagline": { "type": "string", "maxLength": 120 },
-    "defaultTheme": { "enum": ["light", "dark", "midnight", "high-contrast", "trust-authority", "legal", "terminal"] },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$",
+      "description": "Use the same value as the item id."
+    },
+    "platformName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "tagline": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "defaultTheme": {
+      "enum": [
+        "light",
+        "dark",
+        "midnight",
+        "high-contrast",
+        "trust-authority",
+        "legal",
+        "terminal"
+      ]
+    },
     "fonts": {
       "type": "array",
       "maxItems": 12,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["family", "src"],
+        "required": [
+          "family",
+          "src"
+        ],
         "properties": {
-          "family": { "type": "string", "minLength": 1, "maxLength": 64 },
-          "src": { "type": "string", "pattern": "^content/fonts/[a-z0-9._-]+$", "description": "A woff2 file in the pack, at most 2 MiB." },
-          "weight": { "type": "string", "maxLength": 16 },
-          "style": { "enum": ["normal", "italic"] },
-          "display": { "enum": ["swap", "block", "fallback", "optional", "auto"] },
-          "unicodeRange": { "type": ["string", "null"], "maxLength": 200 }
+          "family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "src": {
+            "type": "string",
+            "pattern": "^content/fonts/[a-z0-9._-]+$",
+            "description": "A woff2 file in the pack, at most 2 MiB."
+          },
+          "weight": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "style": {
+            "enum": [
+              "normal",
+              "italic"
+            ]
+          },
+          "display": {
+            "enum": [
+              "swap",
+              "block",
+              "fallback",
+              "optional",
+              "auto"
+            ]
+          },
+          "unicodeRange": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
+          }
         }
       }
     },
@@ -33,34 +91,73 @@
       "additionalProperties": false,
       "description": "CSS font stacks. Every family must be declared in fonts or be a generic family such as system-ui or sans-serif.",
       "properties": {
-        "ui": { "type": "string", "maxLength": 200 },
-        "mono": { "type": "string", "maxLength": 200 },
-        "display": { "type": "string", "maxLength": 200 }
+        "ui": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "mono": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "display": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 200
+        }
       }
     },
     "logos": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "light": { "$ref": "#/$defs/logoPath" },
-        "dark": { "$ref": "#/$defs/logoPath" },
-        "monochrome": { "$ref": "#/$defs/logoPath" },
-        "favicon": { "$ref": "#/$defs/logoPath" },
-        "emailHeader": { "$ref": "#/$defs/logoPath" }
+        "light": {
+          "$ref": "#/$defs/logoPath"
+        },
+        "dark": {
+          "$ref": "#/$defs/logoPath"
+        },
+        "monochrome": {
+          "$ref": "#/$defs/logoPath"
+        },
+        "favicon": {
+          "$ref": "#/$defs/logoPath"
+        },
+        "emailHeader": {
+          "$ref": "#/$defs/logoPath"
+        }
       }
     },
     "themes": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["light"],
+      "required": [
+        "light"
+      ],
       "properties": {
-        "light": { "$ref": "#/$defs/block" },
-        "dark": { "$ref": "#/$defs/block" },
-        "midnight": { "$ref": "#/$defs/block" },
-        "high-contrast": { "$ref": "#/$defs/block" },
-        "trust-authority": { "$ref": "#/$defs/block" },
-        "legal": { "$ref": "#/$defs/block" },
-        "terminal": { "$ref": "#/$defs/block" }
+        "light": {
+          "$ref": "#/$defs/block"
+        },
+        "dark": {
+          "$ref": "#/$defs/block"
+        },
+        "midnight": {
+          "$ref": "#/$defs/block"
+        },
+        "high-contrast": {
+          "$ref": "#/$defs/block"
+        },
+        "trust-authority": {
+          "$ref": "#/$defs/block"
+        },
+        "legal": {
+          "$ref": "#/$defs/block"
+        },
+        "terminal": {
+          "$ref": "#/$defs/block"
+        }
       }
     },
     "login": {
@@ -68,10 +165,28 @@
       "additionalProperties": false,
       "description": "Applies to install-scoped themes only.",
       "properties": {
-        "backgroundColor": { "anyOf": [ { "$ref": "#/$defs/color" }, { "type": "null" } ] },
-        "backgroundImage": { "type": "string", "pattern": "^content/logos/[a-z0-9._-]+$" },
-        "tagline": { "type": "string", "maxLength": 120 },
-        "legalFooter": { "type": "string", "maxLength": 500 }
+        "backgroundColor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backgroundImage": {
+          "type": "string",
+          "pattern": "^content/logos/[a-z0-9._-]+$"
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "legalFooter": {
+          "type": "string",
+          "maxLength": 500
+        }
       }
     },
     "email": {
@@ -79,37 +194,144 @@
       "additionalProperties": false,
       "description": "Invitation and notification e-mail colours. Applies to install-scoped themes only.",
       "properties": {
-        "headerBackground": { "$ref": "#/$defs/color" },
-        "bodyBackground": { "$ref": "#/$defs/color" },
-        "textColor": { "$ref": "#/$defs/color" },
-        "buttonColor": { "$ref": "#/$defs/color" }
+        "headerBackground": {
+          "$ref": "#/$defs/color"
+        },
+        "bodyBackground": {
+          "$ref": "#/$defs/color"
+        },
+        "textColor": {
+          "$ref": "#/$defs/color"
+        },
+        "buttonColor": {
+          "$ref": "#/$defs/color"
+        }
       }
     }
   },
   "$defs": {
-    "color": { "type": "string", "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$" },
-    "logoPath": { "type": "string", "maxLength": 512, "pattern": "^content/logos/[a-z0-9._-]+$", "description": "A PNG, JPEG, ICO or SVG file in the pack, at most 2 MiB. SVG must not contain scripts, event handlers, foreignObject or external references." },
+    "color": {
+      "type": "string",
+      "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|rgba?\\(\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*,\\s*\\d{1,3}\\s*(,\\s*(0|1|0?\\.\\d+)\\s*)?\\))$"
+    },
+    "logoPath": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^content/logos/[a-z0-9._-]+$",
+      "description": "A PNG, JPEG, ICO or SVG file in the pack, at most 2 MiB. SVG must not contain scripts, event handlers, foreignObject or external references."
+    },
     "block": {
       "type": "object",
       "description": "Token overrides for one theme block. Colour values use #rgb, #rrggbb, rgb() or rgba(). --shadow-card takes free CSS up to 200 characters. Missing tokens fall back to the stock theme.",
-      "propertyNames": { "enum": ["--bg", "--s0", "--s1", "--s2", "--s3", "--s4", "--t0", "--t1", "--t2", "--ac", "--aci", "--acs", "--acb", "--pr", "--prs", "--prb", "--te", "--tei", "--tes", "--teb", "--am", "--ams", "--amb", "--re", "--res", "--reb", "--b", "--bm", "--bs", "--scrollbar", "--anchor", "--anchor-raised", "--ink-on-anchor", "--ink-on-anchor-dim", "--shadow-card"] },
-      "additionalProperties": { "type": "string", "maxLength": 200 }
+      "propertyNames": {
+        "enum": [
+          "--bg",
+          "--s0",
+          "--s1",
+          "--s2",
+          "--s3",
+          "--s4",
+          "--t0",
+          "--t1",
+          "--t2",
+          "--ac",
+          "--aci",
+          "--acs",
+          "--acb",
+          "--pr",
+          "--prs",
+          "--prb",
+          "--te",
+          "--tei",
+          "--tes",
+          "--teb",
+          "--am",
+          "--ams",
+          "--amb",
+          "--re",
+          "--res",
+          "--reb",
+          "--b",
+          "--bm",
+          "--bs",
+          "--scrollbar",
+          "--anchor",
+          "--anchor-raised",
+          "--ink-on-anchor",
+          "--ink-on-anchor-dim",
+          "--shadow-card"
+        ]
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 200
+      }
     },
     "themeV1": {
       "title": "Theme schemaVersion 1 (six-field branding)",
       "type": "object",
       "additionalProperties": false,
-      "required": ["primaryColor", "secondaryColor"],
+      "required": [
+        "primaryColor",
+        "secondaryColor"
+      ],
       "properties": {
-        "platformName": { "type": "string", "minLength": 1, "maxLength": 64 },
-        "tagline": { "type": "string", "maxLength": 160 },
-        "logoUrl": { "type": ["string", "null"], "maxLength": 512, "pattern": "^/(?!/)" },
-        "logoDarkUrl": { "type": ["string", "null"], "maxLength": 512, "pattern": "^/(?!/)" },
-        "faviconUrl": { "type": ["string", "null"], "maxLength": 512, "pattern": "^/(?!/)" },
-        "primaryColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-        "secondaryColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-        "loginBackgroundColor": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$" },
-        "defaultTheme": { "enum": ["dark", "light", "midnight", "high-contrast"] }
+        "platformName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "logoUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512,
+          "pattern": "^/(?!/)"
+        },
+        "logoDarkUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512,
+          "pattern": "^/(?!/)"
+        },
+        "faviconUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512,
+          "pattern": "^/(?!/)"
+        },
+        "primaryColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "secondaryColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "loginBackgroundColor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "defaultTheme": {
+          "enum": [
+            "dark",
+            "light",
+            "midnight",
+            "high-contrast"
+          ]
+        }
       }
     },
     "locale": {
@@ -117,15 +339,32 @@
       "description": "Renames UI strings. Keys must exist in the shipped UI bundle; values carry no markup and keep the {{slots}} of the shipped text.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["locale", "keys"],
+      "required": [
+        "locale",
+        "keys"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$" },
-        "locale": { "enum": ["en", "de", "es", "ar"] },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "locale": {
+          "enum": [
+            "en",
+            "de",
+            "es",
+            "ar"
+          ]
+        },
         "keys": {
           "type": "object",
           "minProperties": 1,
           "maxProperties": 2000,
-          "additionalProperties": { "type": "string", "maxLength": 500, "pattern": "^[^<>]*$" }
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 500,
+            "pattern": "^[^<>]*$"
+          }
         }
       }
     }

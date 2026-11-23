@@ -7,7 +7,7 @@ description: Build an AANCER connector: the TypeScript piece, pack.json, the con
 
 A connector is an integration with one external system: a set of actions and triggers that workflows, agents, chat tools and knowledge sources call. AANCER offers 750+ connectors. Most of them come from the connector library that ships with each release, and an administrator installs them from the catalog with one click and no restart.
 
-You can build your own connector for a system that is not covered, such as an in-house ERP or a regional service. A connector is written in TypeScript with the open pieces framework. It reaches an installation as a signed **connector pack**: a pack with exactly one `connector` item, whose built code sits in `content/piece.tar`.
+You can build your own connector for a system that is not covered, such as an in-house ERP or a regional service. A connector is written in TypeScript with the AANCER connector framework (`@aancer/connector-framework`, which ships with the aancer-pack connector kit). It reaches an installation as a signed **connector pack**: a pack with exactly one `connector` item, whose built code sits in `content/piece.tar`.
 
 Connector code runs inside AANCER, so the rules are stricter than for other packs. **Connector packs are signed by AANCER through certification.** Partners build and test the connector, then submit it. AANCER reviews it, builds the archive and signs the pack. A pack signed with any other key is refused.
 
@@ -25,7 +25,7 @@ A connector with one action that echoes its input.
   "version": "0.1.0",
   "main": "./dist/src/index.js",
   "dependencies": {
-    "@activepieces/pieces-framework": "*"
+    "@aancer/connector-framework": "*"
   }
 }
 ```
@@ -33,7 +33,7 @@ A connector with one action that echoes its input.
 `src/index.ts`:
 
 ```ts
-import { createAction, createPiece, PieceAuth, Property } from '@activepieces/pieces-framework';
+import { createAction, createPiece, PieceAuth, Property } from '@aancer/connector-framework';
 
 const echo = createAction({
   name: 'echo',
@@ -108,7 +108,8 @@ JSON Schema: [connector.schema.json](https://aancer.ai/dev/schemas/connector.sch
 | `title` | string | no | pack title. Default `<displayName> connector` |
 | `description` | string | no | at most 300 characters. Default: the `package.json` description |
 | `category` | string | no | `AI`, `Comms`, `Commerce`, `Core`, `Business`, `Finance`, `Productivity`, `Content`, `Developer`, `Support`, `Forms`, `HR`, `Payments`, `Marketing`, `Sales`, `Other`. Default `Other` |
-| `licence` | string | no | `"required"` for a paid connector bound to one customer licence. Leave it out for a free connector |
+| `licence` | string | no | `"required"` for a paid connector bound to one customer licence. Leave it out for a free connector. A paid connector's pack version gets the suffix `-l<first 8 hex of the licence id>` |
+| `framework` | string | no | `major.minor` of the connector framework the connector is built against |
 | `egressHosts` | string[] | no | at most 64 fixed hosts the connector calls. Default `[]` |
 | `egressFromConnection` | object | no | `{ hostProp, portProp, defaultPort }`: take the host from the connection settings. For systems each customer hosts themselves |
 
@@ -124,12 +125,14 @@ This is what certification writes into the pack. You do not write it by hand, bu
 | `description` | string | no | at most 300 characters |
 | `category` | string | yes | see the category list above |
 | `archive` | string | yes | `content/piece.tar` |
-| `framework` | string | yes | `major.minor` of the pieces framework the connector was built against |
+| `framework` | string | yes | `major.minor` of the connector framework, written by certification |
 | `egressHosts` | string[] | yes | at most 64. Hostname with optional `*.` prefix and `:port`. A bare `*` is refused |
 | `egressFromConnection` | object | no | `{ hostProp (1 to 64), portProp (1 to 64), defaultPort (1 to 65535) }` |
-| `licenceId` | string | no | UUID of the customer licence for a paid connector. Absent means free |
+| `licenceId` | string | no | lower-case UUID of the customer licence for a paid connector. Absent means free |
 | `deps` | array | yes | the bill of materials: up to 2000 of `{ name, version, license }` |
 | `build` | object | no | build facts recorded by certification |
+| `knowledgeSource` | object | no | for a connector that feeds knowledge sets: `{ contract: 1, label (1 to 40), actions: { list, item, download, estimate? }, siteProps? (up to 5), sharedConnectionView? }`. Action names match `^[a-z][a-z0-9_]{0,63}$` |
+| `metadata` | boolean | no | `true` when the archive root holds `aancer-metadata.json` |
 
 No other fields are allowed.
 
@@ -144,19 +147,19 @@ Disable or uninstall removes the grant. Connections and credentials are kept.
 
 ### Authentication
 
-The connector carries its own authentication in the piece: `PieceAuth.None()`, `PieceAuth.SecretText(...)`, `PieceAuth.CustomAuth({ props: {...} })` or the framework's OAuth2 properties. Secrets are stored encrypted in the connection.
+The connector carries its own authentication: `PieceAuth.None()`, `PieceAuth.SecretText(...)`, `PieceAuth.CustomAuth({ props: {...} })` or the framework's OAuth2 properties. Secrets are stored encrypted in the connection.
 
 ### Build rules
 
 Certification refuses a connector that breaks any of these rules. Check them before you submit:
 
-- No `install`, `preinstall` or `postinstall` scripts in any dependency.
+- No `install`, `preinstall`, `postinstall` or `prepare` scripts in any dependency.
 - No native add-ons (`*.node`, `binding.gyp`, `prebuilds/`), no symlinks.
-- Do not bundle the pieces framework itself.
+- Do not bundle the connector framework itself.
 - `npm audit --omit=dev` reports 0 vulnerabilities.
 - Dependency licences: MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0 or 0BSD.
 - The built connector loads without network access.
-- At most 2000 packages.
+- At most 2000 packages, 20,000 files and 32 MiB per file.
 - `package-lock.json` is committed.
 
 ## Full examples
@@ -180,7 +183,7 @@ Certification refuses a connector that breaks any of these rules. Check them bef
 The connection properties in the piece must include `server` and `port`:
 
 ```ts
-import { PieceAuth, Property } from '@activepieces/pieces-framework';
+import { PieceAuth, Property } from '@aancer/connector-framework';
 
 export const erpAuth = PieceAuth.CustomAuth({
   displayName: 'ERP connection',
@@ -205,7 +208,7 @@ export const erpAuth = PieceAuth.CustomAuth({
   "id": "conn.example-echo",
   "version": "0.1.0",
   "title": "Example echo connector",
-  "publisher": { "name": "Acme Example Ltd" },
+  "publisher": { "name": "Evntx FZCO", "keyId": "platform-<12 hex>" },
   "parameters": [],
   "assets": [
     { "path": "content/piece.tar", "sha256": "<64 hex characters>", "contentType": "application/x-tar" }
@@ -223,7 +226,7 @@ export const erpAuth = PieceAuth.CustomAuth({
         "description": "Echoes its input back. Useful to test connector install.",
         "category": "Developer",
         "archive": "content/piece.tar",
-        "framework": "0.33",
+        "framework": "<major.minor>",
         "egressHosts": ["api.example.com"],
         "deps": [{ "name": "ms", "version": "2.1.3", "license": "MIT" }]
       }
@@ -236,7 +239,7 @@ export const erpAuth = PieceAuth.CustomAuth({
 
 ### Submit for certification
 
-Build and test the connector with the open pieces framework tools on your own machine. Then submit the source folder through the [AANCER partner programme](https://aancer.ai/partners). AANCER runs the build rules, a security review and the archive checks, then signs the pack with the platform key. You get back a `conn.<name>-<version>.ancpack` file.
+Build and test the connector with the connector kit on your own machine. Then submit the source folder through the [AANCER partner programme](https://aancer.ai/partners). AANCER runs the build rules, a security review and the archive checks, then signs the pack with the platform key. You get back a `conn.<name>-<version>.ancpack` file.
 
 ### Install a certified connector pack
 
@@ -264,7 +267,6 @@ An installed connector is usable about 90 seconds later. No restart is needed. T
 | `PACK_VERSION_CONFLICT` | Pack ... is already imported with different content. Bump the version. | Raise `version` in `package.json` |
 | `PACK_LICENCE_REQUIRED` | This connector pack needs an active licence. | Activate the licence first |
 | `PACK_LICENCE_MISMATCH` | This connector pack was issued for a different licence. | Request a pack issued for this installation |
-| `PACK_RUNNER_INCOMPATIBLE` | (runtime state) | The connector was built for another framework version; rebuild for this release |
 | `CONNECTOR_NOT_INSTALLED` | Install this connector first, then enable it. | |
 | `CONNECTOR_LICENCE_REQUIRED` | This connector is not part of your licence. | |
 | `CREDENTIAL_REQUIRED` | Add the provider API key first. | Configure the connector |
@@ -276,6 +278,5 @@ An installed connector is usable about 90 seconds later. No restart is needed. T
 - One connector per pack. Archive at most 96 MiB, unzipped at most 128 MiB.
 - Connectors are installation-wide. There is no per-workspace install.
 - Connector packs are signed by AANCER through certification. Partners submit them.
-- Knowledge source connectors (connectors that feed a knowledge set) are not yet covered by this public guide.
 - Some catalog connectors are licensed and can be installed but not enabled without the matching licence feature. Paid partner connectors are bound to one customer licence.
 - Check your edition on [aancer.ai/pricing](https://aancer.ai/pricing).

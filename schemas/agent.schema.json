@@ -36,7 +36,7 @@
         ]
       }
     },
-    "skills": { "type": "array", "maxItems": 32, "items": { "type": "string", "minLength": 1, "maxLength": 120 } },
+    "skills": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 120 } },
     "riskHint": { "enum": ["high", null] }
   },
   "$defs": {
@@ -70,7 +70,8 @@
               }
             },
             "if": { "properties": { "id": { "const": "*" } } },
-            "then": { "properties": { "kind": { "enum": ["connector", "knowledge", "workflow", "mcp"] } } }
+            "then": { "properties": { "kind": { "enum": ["connector", "knowledge", "workflow", "mcp"] } } },
+            "else": { "properties": { "id": { "not": { "pattern": "\\*" } } } }
           }
         },
         "input": {
